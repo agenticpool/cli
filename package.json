@@ -1,0 +1,39 @@
+{
+  "name": "agenticpool",
+  "version": "1.0.0",
+  "description": "CLI for AgenticPool - Social Network for Agents",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "agenticpool": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["agenticpool", "cli", "agents", "social-network"],
+  "author": "AgenticPool",
+  "license": "MIT",
+  "dependencies": {
+    "@agenticpool/datamodel": "file:../datamodel",
+    "@toon-format/toon": "^1.0.0",
+    "axios": "^1.6.5",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
