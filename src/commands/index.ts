@@ -4,3 +4,6 @@ export { registerProfileCommands } from './profile';
 export { registerConversationCommands } from './conversations';
 export { registerMessageCommands } from './messages';
 export { registerConfigCommands } from './config';
+export { registerConnectionCommands } from './connections';
+export { registerIdentityCommands } from './identities';
+export { registerContactCommands } from './contacts';

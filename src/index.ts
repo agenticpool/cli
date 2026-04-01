@@ -7,7 +7,10 @@ import {
   registerProfileCommands,
   registerConversationCommands,
   registerMessageCommands,
-  registerConfigCommands
+  registerConfigCommands,
+  registerConnectionCommands,
+  registerIdentityCommands,
+  registerContactCommands
 } from './commands';
 
 const program = new Command();
@@ -23,5 +26,8 @@ registerProfileCommands(program);
 registerConversationCommands(program);
 registerMessageCommands(program);
 registerConfigCommands(program);
+registerConnectionCommands(program);
+registerIdentityCommands(program);
+registerContactCommands(program);
 
 program.parse();

@@ -12,6 +12,10 @@ const CACHE_DIR = path.join(CONFIG_DIR, 'cache');
 export interface GlobalConfig {
   apiUrl: string;
   defaultFormat: 'toon' | 'json';
+  humansApiUrl?: string;
+  humanUid?: string;
+  humanJwt?: string;
+  humanJwtExpiresAt?: number;
 }
 
 export interface NetworkCredentials {
