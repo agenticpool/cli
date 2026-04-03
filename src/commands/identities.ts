@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { ApiClient } from '../api';
 import { configManager } from '../config';
+import { encode } from '@agenticpool/datamodel';
 import chalk from 'chalk';
 
 const DEFAULT_HUMANS_API_URL = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
@@ -14,11 +15,13 @@ export function registerIdentityCommands(program: Command): void {
     .requiredOption('-n, --network <id>', 'Network ID')
     .requiredOption('-p, --public-token <token>', 'Your agent public token on this network')
     .requiredOption('-d, --description <text>', 'Agent description for this identity')
+    .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (options) => {
       try {
         const { client, humanUid } = await getHumanAuthenticatedClient();
+        client.setFormat(options.format === 'json' ? 'json' : 'toon');
 
-        const response = await client.post('/v1/identities', {
+        const response = await client.post<any>('/v1/identities', {
           humanUid,
           networkId: options.network,
           publicToken: options.publicToken,
@@ -26,11 +29,17 @@ export function registerIdentityCommands(program: Command): void {
         });
 
         if (response.success && response.data) {
-          const identity = response.data as any;
-          console.log(chalk.green('✓ Identity registered!'));
-          console.log(chalk.gray('ID:'), identity.id);
-          console.log(chalk.gray('Network:'), options.network);
-          console.log(chalk.gray('Public Token:'), options.publicToken);
+          if (options.format === 'json') {
+            console.log(JSON.stringify(response.data, null, 2));
+          } else if (options.format === 'toon') {
+            console.log(encode(response.data));
+          } else {
+            const identity = response.data;
+            console.log(chalk.green('✓ Identity registered!'));
+            console.log(chalk.gray('ID:'), identity.id);
+            console.log(chalk.gray('Network:'), options.network);
+            console.log(chalk.gray('Public Token:'), options.publicToken);
+          }
         } else {
           console.error(chalk.red('Error:'), response.error?.message || 'Failed to register identity');
         }
@@ -42,30 +51,38 @@ export function registerIdentityCommands(program: Command): void {
   identities
     .command('list')
     .description('List your registered identities')
-    .action(async () => {
+    .option('--format <format>', 'Output format: toon, json, text', 'toon')
+    .action(async (options) => {
       try {
         const { client, humanUid } = await getHumanAuthenticatedClient();
+        client.setFormat(options.format === 'json' ? 'json' : 'toon');
 
         const response = await client.get<any[]>('/v1/identities');
 
         if (response.success && response.data) {
-          if (response.data.length === 0) {
-            console.log(chalk.yellow('No identities registered.'));
-            return;
-          }
-
-          console.log(chalk.green.bold(`\nYour Identities (${response.data.length}):\n`));
-
-          response.data.forEach((identity: any) => {
-            console.log(chalk.cyan.bold(identity.networkId));
-            console.log(chalk.gray('  ID:'), identity.id);
-            console.log(chalk.gray('  Public Token:'), identity.publicToken);
-            console.log(chalk.gray('  Description:'), identity.agentDescription || '(none)');
-            if (identity.addedAt) {
-              console.log(chalk.gray('  Added:'), formatTimestamp(identity.addedAt));
+          if (options.format === 'json') {
+            console.log(JSON.stringify(response.data, null, 2));
+          } else if (options.format === 'toon') {
+            console.log(encode(response.data));
+          } else {
+            if (response.data.length === 0) {
+              console.log(chalk.yellow('No identities registered.'));
+              return;
             }
-            console.log();
-          });
+
+            console.log(chalk.green.bold(`\nYour Identities (${response.data.length}):\n`));
+
+            response.data.forEach((identity: any) => {
+              console.log(chalk.cyan.bold(identity.networkId));
+              console.log(chalk.gray('  ID:'), identity.id);
+              console.log(chalk.gray('  Public Token:'), identity.publicToken);
+              console.log(chalk.gray('  Description:'), identity.agentDescription || '(none)');
+              if (identity.addedAt) {
+                console.log(chalk.gray('  Added:'), formatTimestamp(identity.addedAt));
+              }
+              console.log();
+            });
+          }
         } else {
           console.error(chalk.red('Error:'), response.error?.message || 'Failed to list identities');
         }

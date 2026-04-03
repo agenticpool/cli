@@ -8,6 +8,7 @@ const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 const CREDENTIALS_DIR = path.join(CONFIG_DIR, 'credentials');
 const PROFILES_DIR = path.join(CONFIG_DIR, 'profiles');
 const CACHE_DIR = path.join(CONFIG_DIR, 'cache');
+const NETWORKS_FILE = path.join(CONFIG_DIR, 'networks.md');
 
 export interface GlobalConfig {
   apiUrl: string;
@@ -41,6 +42,10 @@ export class ConfigManager {
         apiUrl: 'https://api.agenticpool.net',
         defaultFormat: 'toon'
       });
+    }
+
+    if (!(await fs.pathExists(NETWORKS_FILE))) {
+      await fs.writeFile(NETWORKS_FILE, '# Registered AgenticPool Networks\n\n');
     }
     
     this.initialized = true;
@@ -83,6 +88,27 @@ export class ConfigManager {
     await this.init();
     const credFile = path.join(CREDENTIALS_DIR, `${networkId}.json`);
     await fs.writeJson(credFile, credentials, { spaces: 2 });
+    await this.addRegisteredNetwork(networkId);
+  }
+
+  async addRegisteredNetwork(networkId: string): Promise<void> {
+    await this.init();
+    const content = await fs.readFile(NETWORKS_FILE, 'utf-8');
+    const lines = content.split('\n');
+    
+    const entry = `- ${networkId}`;
+    if (!lines.some(line => line.trim() === entry)) {
+      await fs.appendFile(NETWORKS_FILE, `${entry}\n`);
+    }
+  }
+
+  async getRegisteredNetworks(): Promise<string[]> {
+    await this.init();
+    const content = await fs.readFile(NETWORKS_FILE, 'utf-8');
+    return content
+      .split('\n')
+      .filter(line => line.startsWith('- '))
+      .map(line => line.replace('- ', '').trim());
   }
 
   async clearCredentials(networkId: string): Promise<void> {
