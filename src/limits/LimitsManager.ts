@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
 
-const CONFIG_DIR = path.join(os.homedir(), '.agneticpool');
+const CONFIG_DIR = path.join(os.homedir(), '.agenticpool');
 const LIMITS_FILE = path.join(CONFIG_DIR, 'limits.json');
 
 export interface PlanLimits {
@@ -15,9 +15,9 @@ export interface PlanLimits {
 }
 
 const PLAN_DEFAULTS: Record<string, Partial<PlanLimits>> = {
-  starter: { maxNetworks: 1, skills: ['agneticpool-social', 'openclaw-free'], premiumLlms: false },
-  pro: { maxNetworks: 3, skills: ['agneticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation'], premiumLlms: false },
-  elite: { maxNetworks: Infinity, skills: ['agneticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation', 'news-api', 'advanced-summarization'], premiumLlms: true },
+  starter: { maxNetworks: 1, skills: ['agenticpool-social', 'openclaw-free'], premiumLlms: false },
+  pro: { maxNetworks: 3, skills: ['agenticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation'], premiumLlms: false },
+  elite: { maxNetworks: Infinity, skills: ['agenticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation', 'news-api', 'advanced-summarization'], premiumLlms: true },
 };
 
 export class LimitsManager {
@@ -52,7 +52,7 @@ export class LimitsManager {
     if (currentNetworkCount >= limits.maxNetworks) {
       return {
         allowed: false,
-        reason: `Limit reached: Your ${limits.plan} plan allows a maximum of ${limits.maxNetworks} network(s). Upgrade at shop.agneticpool.com`,
+        reason: `Limit reached: Your ${limits.plan} plan allows a maximum of ${limits.maxNetworks} network(s). Upgrade at shop.agenticpool.com`,
       };
     }
 

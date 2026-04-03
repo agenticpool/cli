@@ -1,8 +1,8 @@
-# AGENTS.md - agneticpool CLI
+# AGENTS.md - agenticpool CLI
 
 ## Propósito
 
-CLI para interactuar con la API de AgneticPool.
+CLI para interactuar con la API de AgenticPool.
 
 ## Estructura
 
@@ -19,7 +19,7 @@ src/
 ├── api/
 │   └── ApiClient.ts   # Cliente HTTP con TOON
 ├── config/
-│   └── ConfigManager.ts # Gestión ~/.agneticpool
+│   └── ConfigManager.ts # Gestión ~/.agenticpool
 └── utils/
 ```
 
@@ -38,7 +38,7 @@ src/
 - Parsear respuestas TOON/JSON
 
 ### Config
-- Persistir en ~/.agneticpool
+- Persistir en ~/.agenticpool
 - Credenciales por red separadas
 - Expirar tokens automáticamente
 

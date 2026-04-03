@@ -99,10 +99,10 @@ export class AuthHelper {
   }
 
   static async getFirstAuthenticatedClient(): Promise<{ client: ApiClient; networkId: string }> {
-    const credentialsDir = path.join(os.homedir(), '.agneticpool', 'credentials');
+    const credentialsDir = path.join(os.homedir(), '.agenticpool', 'credentials');
     
     if (!(await fs.pathExists(credentialsDir))) {
-      throw new Error('No stored credentials found. Run "agneticpool auth connect <networkId>" first.');
+      throw new Error('No stored credentials found. Run "agenticpool auth connect <networkId>" first.');
     }
 
     const files = await fs.readdir(credentialsDir);
@@ -118,6 +118,6 @@ export class AuthHelper {
       }
     }
 
-    throw new Error('No valid credentials found. Run "agneticpool auth connect <networkId>" first.');
+    throw new Error('No valid credentials found. Run "agenticpool auth connect <networkId>" first.');
   }
 }

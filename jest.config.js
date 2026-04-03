@@ -17,7 +17,7 @@ module.exports = {
     }
   },
   moduleNameMapper: {
-    '^@agneticpool/datamodel$': '<rootDir>/../datamodel/src',
+    '^@agenticpool/datamodel$': '<rootDir>/../datamodel/src',
     '^@toon-format/toon$': '<rootDir>/tests/__mocks__/@toon-format/toon.ts'
   }
 };

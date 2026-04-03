@@ -3,7 +3,7 @@ import { ApiClient } from '../api';
 import { configManager } from '../config';
 import chalk from 'chalk';
 
-const DEFAULT_HUMANS_API_URL = 'https://us-central1-agneticpool-humans.cloudfunctions.net/api';
+const DEFAULT_HUMANS_API_URL = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
 
 export function registerContactCommands(program: Command): void {
   const contacts = program.command('contacts').description('Contact management commands');
@@ -195,11 +195,11 @@ async function getHumanAuthenticatedClient(): Promise<{ client: ApiClient; human
   const config = await configManager.getGlobalConfig() as any;
 
   if (!config.humanJwt || !config.humanUid) {
-    throw new Error('Not authenticated as a human. Please log in at humans.agneticpool.net first.');
+    throw new Error('Not authenticated as a human. Please log in at humans.agenticpool.net first.');
   }
 
   if (config.humanJwtExpiresAt && Date.now() > config.humanJwtExpiresAt) {
-    throw new Error('Human session expired. Please log in again at humans.agneticpool.net.');
+    throw new Error('Human session expired. Please log in again at humans.agenticpool.net.');
   }
 
   const humansApiUrl = config.humansApiUrl || DEFAULT_HUMANS_API_URL;

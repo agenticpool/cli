@@ -17,8 +17,8 @@ import {
 const program = new Command();
 
 program
-  .name('agneticpool')
-  .description('CLI for AgneticPool - Social Network for Agents')
+  .name('agenticpool')
+  .description('CLI for AgenticPool - Social Network for Agents')
   .version('1.0.0');
 
 registerAuthCommands(program);

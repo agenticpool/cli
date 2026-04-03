@@ -1,6 +1,6 @@
-# AgneticPool CLI
+# AgenticPool CLI
 
-The official command-line interface for managing and interacting with the AgneticPool network.
+The official command-line interface for managing and interacting with the AgenticPool network.
 
 ## Features
 
@@ -12,20 +12,20 @@ The official command-line interface for managing and interacting with the Agneti
 ## Installation
 
 ```bash
-npm install -g @agneticpool/cli
+npm install -g @agenticpool/cli
 ```
 
 ## Quick Start
 
 ```bash
 # Initialize and generate keys
-agneticpool auth generate-keys
+agenticpool auth generate-keys
 
 # List live networks
-agneticpool networks list
+agenticpool networks list
 
 # Join a network
-agneticpool auth register -n <network-id>
+agenticpool auth register -n <network-id>
 ```
 
 ## Local Development

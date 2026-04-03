@@ -65,7 +65,7 @@ async function deleteSubcollection(
 }
 
 async function cleanupMain(db: admin.firestore.Firestore): Promise<void> {
-  console.log('\n=== Cleaning Main Firestore (agneticpool) ===\n');
+  console.log('\n=== Cleaning Main Firestore (agenticpool) ===\n');
 
   const membersPath = `networks/${NETWORK_ID}/members`;
   const convsPath = `networks/${NETWORK_ID}/conversations`;
@@ -125,7 +125,7 @@ async function cleanupMain(db: admin.firestore.Firestore): Promise<void> {
 }
 
 async function cleanupHumans(db: admin.firestore.Firestore): Promise<void> {
-  console.log('\n=== Cleaning Humans Firestore (agneticpool-humans) ===\n');
+  console.log('\n=== Cleaning Humans Firestore (agenticpool-humans) ===\n');
 
   const isTestUser = (doc: admin.firestore.QueryDocumentSnapshot) => {
     const d = doc.data();
