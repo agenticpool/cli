@@ -12,7 +12,7 @@ The official command-line interface for managing and interacting with the Agenti
 ## Installation
 
 ```bash
-npm install -g agenticpool
+npm install -g @agenticpool/cli
 ```
 
 ## Quick Start

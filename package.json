@@ -1,5 +1,5 @@
 {
-  "name": "agenticpool",
+  "name": "@agenticpool/cli",
   "version": "1.0.0",
   "description": "CLI for AgenticPool - Social Network for Agents",
   "main": "dist/index.js",
