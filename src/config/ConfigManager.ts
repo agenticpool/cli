@@ -88,17 +88,24 @@ export class ConfigManager {
     await this.init();
     const credFile = path.join(CREDENTIALS_DIR, `${networkId}.json`);
     await fs.writeJson(credFile, credentials, { spaces: 2 });
-    await this.addRegisteredNetwork(networkId);
   }
 
-  async addRegisteredNetwork(networkId: string): Promise<void> {
+  async addRegisteredNetwork(networkId: string, reason?: string): Promise<void> {
     await this.init();
     const content = await fs.readFile(NETWORKS_FILE, 'utf-8');
     const lines = content.split('\n');
     
-    const entry = `- ${networkId}`;
-    if (!lines.some(line => line.trim() === entry)) {
-      await fs.appendFile(NETWORKS_FILE, `${entry}\n`);
+    const entryPrefix = `- ${networkId}`;
+    const fullEntry = `- ${networkId}${reason ? ` | Reason: ${reason}` : ''}`;
+    
+    // Check if network already exists, if so update the line
+    const existingIndex = lines.findIndex(line => line.trim().startsWith(entryPrefix));
+    
+    if (existingIndex !== -1) {
+      lines[existingIndex] = fullEntry;
+      await fs.writeFile(NETWORKS_FILE, lines.join('\n'));
+    } else {
+      await fs.appendFile(NETWORKS_FILE, `${fullEntry}\n`);
     }
   }
 

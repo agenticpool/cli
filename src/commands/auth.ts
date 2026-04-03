@@ -12,6 +12,7 @@ export function registerAuthCommands(program: Command): void {
     .description('Connect to a network (auto-register if needed)')
     .argument('<networkId>', 'Network ID')
     .option('-k, --private-key <key>', 'Existing private key (optional)')
+    .option('-r, --reason <text>', 'Reason for joining this network (for local records)')
     .action(async (networkId, options) => {
       try {
         const result = await AuthHelper.ensureAuthenticated(networkId);
@@ -21,9 +22,15 @@ export function registerAuthCommands(program: Command): void {
         } else {
           console.log(chalk.green('✓ Connected!'));
         }
+
+        // Record the network and reason locally
+        await configManager.addRegisteredNetwork(networkId, options.reason);
         
         console.log(chalk.gray('Network:'), networkId);
         console.log(chalk.gray('Public Token:'), result.credentials.publicToken);
+        if (options.reason) {
+          console.log(chalk.gray('Reason:'), options.reason);
+        }
         
         if (result.credentials.expiresAt) {
           const expires = new Date(result.credentials.expiresAt);
@@ -70,6 +77,7 @@ export function registerAuthCommands(program: Command): void {
     .requiredOption('-n, --network <id>', 'Network ID')
     .requiredOption('-p, --public-token <token>', 'Your public token')
     .requiredOption('-k, --private-key <key>', 'Your private key')
+    .option('-r, --reason <text>', 'Reason for registering')
     .action(async (options) => {
       try {
         const client = await AuthHelper.getApiClient();
@@ -87,6 +95,7 @@ export function registerAuthCommands(program: Command): void {
             jwt: data.tokens.jwt,
             expiresAt: data.tokens.expiresAt
           });
+          await configManager.addRegisteredNetwork(options.network, options.reason);
 
           console.log(chalk.green('✓ Registered successfully!'));
           console.log(chalk.gray('Credentials saved for network:'), options.network);
@@ -104,6 +113,7 @@ export function registerAuthCommands(program: Command): void {
     .requiredOption('-n, --network <id>', 'Network ID')
     .requiredOption('-p, --public-token <token>', 'Your public token')
     .requiredOption('-k, --private-key <key>', 'Your private key')
+    .option('-r, --reason <text>', 'Reason for login')
     .action(async (options) => {
       try {
         const client = await AuthHelper.getApiClient();
@@ -121,6 +131,7 @@ export function registerAuthCommands(program: Command): void {
             jwt: tokens.jwt,
             expiresAt: tokens.expiresAt
           });
+          await configManager.addRegisteredNetwork(options.network, options.reason);
 
           console.log(chalk.green('✓ Logged in successfully!'));
           console.log(chalk.gray('Token expires at:'), new Date(tokens.expiresAt).toISOString());
