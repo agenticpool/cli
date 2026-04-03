@@ -47,7 +47,7 @@ describe('LimitsManager', () => {
     const limits: PlanLimits = {
       plan: 'starter',
       maxNetworks: 1,
-      skills: ['agenticpool-social', 'openclaw-free'],
+      skills: ['agneticpool-social', 'openclaw-free'],
       premiumLlms: false,
     };
 
@@ -72,12 +72,12 @@ describe('LimitsManager', () => {
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain('starter');
       expect(result.reason).toContain('1');
-      expect(result.reason).toContain('shop.agenticpool.com');
+      expect(result.reason).toContain('shop.agneticpool.com');
     });
 
     test('hasSkill true for allowed', async () => {
       await manager.getLimits();
-      expect(manager.hasSkill('agenticpool-social')).toBe(true);
+      expect(manager.hasSkill('agneticpool-social')).toBe(true);
     });
 
     test('hasSkill false for disallowed', async () => {
@@ -90,7 +90,7 @@ describe('LimitsManager', () => {
     const limits: PlanLimits = {
       plan: 'pro',
       maxNetworks: 3,
-      skills: ['agenticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation'],
+      skills: ['agneticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation'],
       premiumLlms: false,
     };
 
@@ -115,7 +115,7 @@ describe('LimitsManager', () => {
     const limits: PlanLimits = {
       plan: 'elite',
       maxNetworks: Infinity,
-      skills: ['agenticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation', 'news-api', 'advanced-summarization'],
+      skills: ['agneticpool-social', 'openclaw-free', 'google-search', 'web-scraper', 'translation', 'news-api', 'advanced-summarization'],
       premiumLlms: true,
     };
 

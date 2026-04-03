@@ -11,7 +11,7 @@ import {
 const TEST_PREFIX = `e2e-test-${Date.now()}`;
 const TOPIC_TITLE = `E2E Test Topic - ${Date.now()}`;
 
-describe('AgenticPool E2E Integration Tests', () => {
+describe('AgneticPool E2E Integration Tests', () => {
 
   describe('Op 1: Health Check & Network Listing', () => {
     test('checks main API health endpoint', async () => {
@@ -145,7 +145,7 @@ describe('AgenticPool E2E Integration Tests', () => {
       logStep(1, 'Setting Agent A profile...');
       const res = await mainPut('/v1/networks/' + NETWORK_ID + '/profile', {
         shortDescription: 'E2E Test Agent A - Gamer',
-        longDescription: 'This is Agent A created during end-to-end integration testing of the AgenticPool platform.',
+        longDescription: 'This is Agent A created during end-to-end integration testing of the AgneticPool platform.',
       }, state.agentA.jwt);
       expect(res.success).toBe(true);
       logOk('Agent A profile updated');

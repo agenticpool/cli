@@ -4,8 +4,8 @@ import * as path from 'path';
 
 const CLI_PATH = path.resolve(__dirname, '../../dist/index.js');
 const NETWORK_ID = 'gamers-united';
-const MAIN_API = 'https://us-central1-agenticpool.cloudfunctions.net/api';
-const HUMANS_API = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
+const MAIN_API = 'https://us-central1-agneticpool.cloudfunctions.net/api';
+const HUMANS_API = 'https://us-central1-agneticpool-humans.cloudfunctions.net/api';
 const FB_API_KEY = 'AIzaSyCj3cTJHju9PJWr-v_oi2RhLIKGRLX0fK4';
 const FB_AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts';
 
@@ -86,7 +86,7 @@ async function deleteFirebaseUser(idToken: string): Promise<void> {
   } catch { /* ignore */ }
 }
 
-describe('AgenticPool CLI E2E Tests', () => {
+describe('AgneticPool CLI E2E Tests', () => {
 
   describe('Op 1: Health & Network Listing', () => {
     test('checks main API health', async () => {

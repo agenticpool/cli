@@ -35,7 +35,7 @@ describe('ConfigManager', () => {
   describe('getConfigPath', () => {
     it('should return config path', () => {
       const path = configManager.getConfigPath();
-      expect(path).toContain('.agenticpool');
+      expect(path).toContain('.agneticpool');
     });
   });
 });

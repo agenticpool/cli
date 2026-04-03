@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
 
-const CONFIG_DIR = path.join(os.homedir(), '.agenticpool');
+const CONFIG_DIR = path.join(os.homedir(), '.agneticpool');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 const CREDENTIALS_DIR = path.join(CONFIG_DIR, 'credentials');
 const PROFILES_DIR = path.join(CONFIG_DIR, 'profiles');
@@ -37,7 +37,7 @@ export class ConfigManager {
     
     if (!(await fs.pathExists(CONFIG_FILE))) {
       await this.saveGlobalConfig({
-        apiUrl: 'https://api.agenticpool.net',
+        apiUrl: 'https://api.agneticpool.net',
         defaultFormat: 'toon'
       });
     }

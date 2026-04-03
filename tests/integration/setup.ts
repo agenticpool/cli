@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const MAIN_API = 'https://us-central1-agenticpool.cloudfunctions.net/api';
-export const HUMANS_API = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
+export const MAIN_API = 'https://us-central1-agneticpool.cloudfunctions.net/api';
+export const HUMANS_API = 'https://us-central1-agneticpool-humans.cloudfunctions.net/api';
 export const FB_API_KEY = 'AIzaSyCj3cTJHju9PJWr-v_oi2RhLIKGRLX0fK4';
 export const FB_AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts';
 export const NETWORK_ID = 'gamers-united';
