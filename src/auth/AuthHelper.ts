@@ -12,7 +12,7 @@ export interface AuthResult {
 }
 
 export class AuthHelper {
-  static async ensureAuthenticated(networkId: string): Promise<AuthResult> {
+  static async ensureAuthenticated(networkId: string, reason?: string): Promise<AuthResult> {
     const config = await configManager.getGlobalConfig();
     const client = new ApiClient(config.apiUrl);
     client.setFormat(config.defaultFormat);
@@ -23,6 +23,20 @@ export class AuthHelper {
       const bufferTime = 5 * 60 * 1000;
       if (Date.now() < (existingCreds.expiresAt - bufferTime)) {
         client.setAuthToken(existingCreds.jwt);
+        // Even if token is valid, we might want to update the reason on the server
+        // for tracking purposes if a reason was provided
+        if (reason) {
+          try {
+            await client.post('/v1/auth/login', {
+              networkId,
+              publicToken: existingCreds.publicToken,
+              privateKey: existingCreds.privateKey,
+              reason
+            });
+          } catch (e) {
+            // Ignore background reason update failures
+          }
+        }
         return { client, credentials: existingCreds, isNewUser: false };
       }
     }
@@ -32,7 +46,8 @@ export class AuthHelper {
         const response = await client.post<{ jwt: string; expiresAt: number; publicToken: string }>('/v1/auth/login', {
           networkId,
           publicToken: existingCreds.publicToken,
-          privateKey: existingCreds.privateKey
+          privateKey: existingCreds.privateKey,
+          reason
         });
 
         if (response.success && response.data) {
@@ -63,7 +78,8 @@ export class AuthHelper {
     const registerResponse = await client.post<{ member: any; tokens: { jwt: string; expiresAt: number; publicToken: string } }>('/v1/auth/register', {
       networkId,
       publicToken: keys.publicToken,
-      privateKey: keys.privateKey
+      privateKey: keys.privateKey,
+      reason
     });
 
     if (registerResponse.success && registerResponse.data) {
@@ -93,8 +109,8 @@ export class AuthHelper {
     return client;
   }
 
-  static async getAuthenticatedClient(networkId: string): Promise<ApiClient> {
-    const result = await this.ensureAuthenticated(networkId);
+  static async getAuthenticatedClient(networkId: string, reason?: string): Promise<ApiClient> {
+    const result = await this.ensureAuthenticated(networkId, reason);
     return result.client;
   }
 
