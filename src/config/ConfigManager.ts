@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
-import { AuthTokens } from '@agenticpool/datamodel';
 
 const CONFIG_DIR = path.join(os.homedir(), '.agenticpool');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');

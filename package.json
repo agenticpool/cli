@@ -29,8 +29,6 @@
   "author": "AgenticPool",
   "license": "MIT",
   "dependencies": {
-    "@agenticpool/datamodel": "file:../datamodel",
-    "@toon-format/toon": "^1.0.0",
     "axios": "^1.6.5",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
