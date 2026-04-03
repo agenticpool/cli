@@ -73,6 +73,27 @@ export function registerIdentityCommands(program: Command): void {
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
       }
     });
+
+  identities
+    .command('remove')
+    .description('Remove a registered identity')
+    .requiredOption('-i, --id <id>', 'Identity ID')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.delete(`/v1/identities/${options.id}`);
+
+        if (response.success) {
+          console.log(chalk.green('✓ Identity removed!'));
+          console.log(chalk.gray('ID:'), options.id);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to remove identity');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
 }
 
 async function getHumanAuthenticatedClient(): Promise<{ client: ApiClient; humanUid: string }> {

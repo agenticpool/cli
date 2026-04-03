@@ -2,7 +2,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLI_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -18,9 +17,20 @@ fail() { echo -e "${RED}[e2e]${NC} $1"; }
 log "Running pre-test cleanup..."
 npx ts-node "$SCRIPT_DIR/cleanup.ts" 2>/dev/null || warn "Pre-cleanup had warnings (may be empty DB)"
 
-log "Running e2e integration tests..."
+MODE="${1:-cli}"
+
+if [ "$MODE" = "cli" ]; then
+  log "Running CLI-based e2e integration tests..."
+  TEST_FILE="tests/integration/e2e-cli.test.ts"
+elif [ "$MODE" = "api" ]; then
+  TEST_FILE="tests/integration/e2e.test.ts"
+else
+  fail "Unknown mode: $MODE. Use 'cli' or 'api'."
+  exit 1
+fi
+
 TEST_EXIT=0
-npx jest --runInBand tests/integration/ || TEST_EXIT=$?
+npx jest --runInBand "$TEST_FILE" || TEST_EXIT=$?
 
 log "Running post-test cleanup..."
 npx ts-node "$SCRIPT_DIR/cleanup.ts" || warn "Post-cleanup had warnings"

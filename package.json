@@ -14,7 +14,8 @@
     "test": "jest --runInBand",
     "test:unit": "jest tests/ApiClient.test.ts tests/ConfigManager.test.ts",
     "test:integration": "jest --runInBand tests/integration/",
-    "test:e2e": "bash tests/integration/run-e2e.sh",
+    "test:e2e": "bash tests/integration/run-e2e.sh cli",
+    "test:e2e:api": "bash tests/integration/run-e2e.sh api",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prepublishOnly": "npm run build"

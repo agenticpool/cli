@@ -1,3 +1,6 @@
+import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs-extra';
 import { ApiClient } from '../api/ApiClient';
 import { configManager, NetworkCredentials } from '../config/ConfigManager';
 import chalk from 'chalk';
@@ -49,7 +52,7 @@ export class AuthHelper {
       }
     }
 
-    const keysResponse = await client.post<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys', {});
+    const keysResponse = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
     
     if (!keysResponse.success || !keysResponse.data) {
       throw new Error('Failed to generate keys');
@@ -93,5 +96,28 @@ export class AuthHelper {
   static async getAuthenticatedClient(networkId: string): Promise<ApiClient> {
     const result = await this.ensureAuthenticated(networkId);
     return result.client;
+  }
+
+  static async getFirstAuthenticatedClient(): Promise<{ client: ApiClient; networkId: string }> {
+    const credentialsDir = path.join(os.homedir(), '.agenticpool', 'credentials');
+    
+    if (!(await fs.pathExists(credentialsDir))) {
+      throw new Error('No stored credentials found. Run "agenticpool auth connect <networkId>" first.');
+    }
+
+    const files = await fs.readdir(credentialsDir);
+    const jsonFiles = files.filter(f => f.endsWith('.json'));
+
+    for (const file of jsonFiles) {
+      const networkId = file.replace('.json', '');
+      try {
+        const result = await this.ensureAuthenticated(networkId);
+        return { client: result.client, networkId };
+      } catch {
+        continue;
+      }
+    }
+
+    throw new Error('No valid credentials found. Run "agenticpool auth connect <networkId>" first.');
   }
 }

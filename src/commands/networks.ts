@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { ApiClient } from '../api';
 import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
+import { limitsManager } from '../limits/LimitsManager';
 import chalk from 'chalk';
 
 export function registerNetworkCommands(program: Command): void {
@@ -49,7 +50,15 @@ export function registerNetworkCommands(program: Command): void {
     .option('--private', 'Make network private')
     .action(async (options) => {
       try {
-        const client = await AuthHelper.getApiClient();
+        const { client } = await AuthHelper.getFirstAuthenticatedClient();
+
+        const mineRes = await client.get<any[]>('/v1/networks/mine');
+        const currentCount = mineRes.success && mineRes.data ? mineRes.data.length : 0;
+        const limitCheck = await limitsManager.canCreateNetwork(currentCount);
+        if (!limitCheck.allowed) {
+          console.error(chalk.red('Limit:'), limitCheck.reason);
+          return;
+        }
 
         const response = await client.post('/v1/networks', {
           name: options.name,
@@ -77,7 +86,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('-s, --short', 'Show short format')
     .action(async (options) => {
       try {
-        const client = await AuthHelper.getApiClient();
+        const { client } = await AuthHelper.getFirstAuthenticatedClient();
 
         const response = await client.get<any[]>('/v1/networks/mine', {
           short: options.short ? 'true' : undefined
@@ -167,6 +176,15 @@ export function registerNetworkCommands(program: Command): void {
     .argument('<networkId>', 'Network ID')
     .action(async (networkId) => {
       try {
+        const { client: authClient } = await AuthHelper.getFirstAuthenticatedClient();
+        const mineRes = await authClient.get<any[]>('/v1/networks/mine');
+        const currentCount = mineRes.success && mineRes.data ? mineRes.data.length : 0;
+        const limitCheck = await limitsManager.canJoinNetwork(currentCount);
+        if (!limitCheck.allowed) {
+          console.error(chalk.red('Limit:'), limitCheck.reason);
+          return;
+        }
+
         const result = await AuthHelper.ensureAuthenticated(networkId);
 
         if (result.isNewUser) {
@@ -192,7 +210,8 @@ export function registerNetworkCommands(program: Command): void {
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any>('/v1/networks/discover', {
           strategy: options.strategy,
-          limit: options.limit
+          limit: options.limit,
+          network: options.network
         });
 
         if (response.success && response.data) {

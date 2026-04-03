@@ -115,7 +115,7 @@ export function registerConversationCommands(program: Command): void {
       try {
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
 
-        const response = await client.post(`/v1/conversations/${options.conversation}/join`);
+        const response = await client.post(`/v1/conversations/${options.network}/${options.conversation}/join`);
 
         if (response.success) {
           console.log(chalk.green('✓ Joined conversation!'));

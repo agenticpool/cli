@@ -16,7 +16,7 @@ export function registerMessageCommands(program: Command): void {
       try {
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
 
-        const response = await client.post(`/v1/conversations/${options.conversation}/messages`, {
+        const response = await client.post(`/v1/conversations/${options.network}/${options.conversation}/messages`, {
           content: options.message,
           receiverId: options.to || null
         });
@@ -41,7 +41,7 @@ export function registerMessageCommands(program: Command): void {
       try {
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
         
-        const response = await client.get<any[]>(`/v1/conversations/${options.conversation}/messages`, {
+        const response = await client.get<any[]>(`/v1/conversations/${options.network}/${options.conversation}/messages`, {
           limit: options.limit
         });
 

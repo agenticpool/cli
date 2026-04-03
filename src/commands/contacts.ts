@@ -119,6 +119,76 @@ export function registerContactCommands(program: Command): void {
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
       }
     });
+
+  contacts
+    .command('update')
+    .description('Update contact notes')
+    .requiredOption('-u, --uid <uid>', 'Contact user UID')
+    .requiredOption('-n, --notes <text>', 'Notes about this contact')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.put(`/v1/contacts/${options.uid}`, {
+          notes: options.notes
+        });
+
+        if (response.success) {
+          console.log(chalk.green('✓ Contact updated!'));
+          console.log(chalk.gray('UID:'), options.uid);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to update contact');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  contacts
+    .command('block')
+    .description('Block a contact (removes bidirectional contacts)')
+    .requiredOption('-u, --uid <uid>', 'Contact user UID')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.delete(`/v1/contacts/${options.uid}`);
+
+        if (response.success) {
+          console.log(chalk.green('✓ Contact blocked and removed.'));
+          console.log(chalk.gray('UID:'), options.uid);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to block contact');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  contacts
+    .command('link-identity')
+    .description('Link a network identity to a contact')
+    .requiredOption('-u, --uid <uid>', 'Contact user UID')
+    .requiredOption('-i, --identity-id <id>', 'Identity ID to link')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.post(`/v1/contacts/${options.uid}/link-identity`, {
+          identityId: options.identityId
+        });
+
+        if (response.success) {
+          console.log(chalk.green('✓ Identity linked to contact!'));
+          console.log(chalk.gray('Contact UID:'), options.uid);
+          console.log(chalk.gray('Identity ID:'), options.identityId);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to link identity');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
 }
 
 async function getHumanAuthenticatedClient(): Promise<{ client: ApiClient; humanUid: string }> {

@@ -6,6 +6,24 @@ import chalk from 'chalk';
 
 const DEFAULT_HUMANS_API_URL = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
 
+async function getHumanAuthenticatedClient(): Promise<{ client: ApiClient; humanUid: string }> {
+  const config = await configManager.getGlobalConfig() as any;
+
+  if (!config.humanJwt || !config.humanUid) {
+    throw new Error('Not authenticated as a human. Run "agenticpool humans login" first.');
+  }
+
+  if (config.humanJwtExpiresAt && Date.now() > config.humanJwtExpiresAt) {
+    throw new Error('Human session expired. Run "agenticpool humans login" again.');
+  }
+
+  const humansApiUrl = config.humansApiUrl || DEFAULT_HUMANS_API_URL;
+  const client = new ApiClient(humansApiUrl);
+  client.setAuthToken(config.humanJwt);
+
+  return { client, humanUid: config.humanUid };
+}
+
 export function registerConnectionCommands(program: Command): void {
   const connections = program.command('connections').description('Agent connection management commands');
 
@@ -138,6 +156,87 @@ export function registerConnectionCommands(program: Command): void {
           console.log(chalk.gray('ID:'), options.id);
         } else {
           console.error(chalk.red('Error:'), response.error?.message || 'Failed to reject connection');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  connections
+    .command('mine')
+    .description('List all your connections (as a human)')
+    .action(async () => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.get<any[]>('/v1/connections/mine');
+
+        if (response.success && response.data) {
+          if (response.data.length === 0) {
+            console.log(chalk.yellow('No connections found.'));
+            return;
+          }
+
+          console.log(chalk.green.bold(`\nYour Connections (${response.data.length}):\n`));
+
+          response.data.forEach((conn: any) => {
+            console.log(chalk.cyan.bold(`Connection ${conn.id}`));
+            console.log(chalk.gray('  From:'), conn.fromAgentToken);
+            console.log(chalk.gray('  To:'), conn.toAgentToken);
+            console.log(chalk.gray('  Network:'), conn.networkId);
+            console.log(chalk.gray('  Status:'), conn.status);
+            if (conn.fromExplanation) {
+              console.log(chalk.gray('  From explanation:'), conn.fromExplanation);
+            }
+            if (conn.toExplanation) {
+              console.log(chalk.gray('  To explanation:'), conn.toExplanation);
+            }
+            console.log();
+          });
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to list connections');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  connections
+    .command('human-accept')
+    .description('Accept a connection as a human (approves the contact relationship)')
+    .requiredOption('-i, --id <id>', 'Connection ID')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.post(`/v1/connections/${options.id}/human-accept`);
+
+        if (response.success) {
+          console.log(chalk.green('✓ Connection accepted as human!'));
+          console.log(chalk.gray('ID:'), options.id);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to accept connection');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  connections
+    .command('revoke')
+    .description('Revoke a connection (deletes bidirectional contacts if connected)')
+    .requiredOption('-i, --id <id>', 'Connection ID')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const response = await client.post(`/v1/connections/${options.id}/revoke`);
+
+        if (response.success) {
+          console.log(chalk.green('✓ Connection revoked.'));
+          console.log(chalk.gray('ID:'), options.id);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to revoke connection');
         }
       } catch (error) {
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');

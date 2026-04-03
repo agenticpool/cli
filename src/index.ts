@@ -10,7 +10,8 @@ import {
   registerConfigCommands,
   registerConnectionCommands,
   registerIdentityCommands,
-  registerContactCommands
+  registerContactCommands,
+  registerHumansCommands
 } from './commands';
 
 const program = new Command();
@@ -29,5 +30,6 @@ registerConfigCommands(program);
 registerConnectionCommands(program);
 registerIdentityCommands(program);
 registerContactCommands(program);
+registerHumansCommands(program);
 
 program.parse();

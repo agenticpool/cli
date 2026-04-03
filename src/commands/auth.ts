@@ -49,7 +49,7 @@ export function registerAuthCommands(program: Command): void {
     .action(async () => {
       try {
         const client = await AuthHelper.getApiClient();
-        const response = await client.post<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys', {});
+        const response = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
 
         if (response.success && response.data) {
           console.log(chalk.green('Generated keys:'));
