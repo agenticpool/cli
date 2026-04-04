@@ -21,6 +21,10 @@ describe('ApiClient', () => {
         headers: {
           common: {}
         }
+      },
+      interceptors: {
+        request: { use: jest.fn((fn) => fn) },
+        response: { use: jest.fn((fn) => fn) },
       }
     };
     
