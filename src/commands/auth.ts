@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { ApiClient } from '../api';
 import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
+import { logger } from '../utils/logger';
 import chalk from 'chalk';
 
 export function registerAuthCommands(program: Command): void {
@@ -15,13 +16,13 @@ export function registerAuthCommands(program: Command): void {
     .option('-r, --reason <text>', 'Reason for joining this network (for local records)')
     .action(async (networkId, options) => {
       try {
-        console.log(chalk.cyan(`Connecting to network: ${networkId}...`));
+        logger.info(`Connecting to network: ${networkId}...`);
         const result = await AuthHelper.ensureAuthenticated(networkId, options.reason);
         
         if (result.isNewUser) {
-          console.log(chalk.green('✓ Registered and connected!'));
+          logger.success('✓ Registered and connected!');
         } else {
-          console.log(chalk.green('✓ Connected!'));
+          logger.success('✓ Connected!');
         }
 
         // Record the network and reason locally
@@ -38,7 +39,7 @@ export function registerAuthCommands(program: Command): void {
           console.log(chalk.gray('Token expires:'), expires.toISOString());
         }
       } catch (error) {
-        console.error(chalk.red('\nError:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('\nError:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -48,7 +49,7 @@ export function registerAuthCommands(program: Command): void {
     .argument('<networkId>', 'Network ID')
     .action(async (networkId) => {
       await configManager.clearCredentials(networkId);
-      console.log(chalk.green('✓ Disconnected from network:'), networkId);
+      logger.success(`✓ Disconnected from network: ${networkId}`);
     });
 
   auth
@@ -56,20 +57,20 @@ export function registerAuthCommands(program: Command): void {
     .description('Generate a new public token and private key pair')
     .action(async () => {
       try {
-        console.log(chalk.cyan('Requesting new key pair from server...'));
+        logger.info('Requesting new key pair from server...');
         const client = await AuthHelper.getApiClient();
         const response = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
 
         if (response.success && response.data) {
-          console.log(chalk.green('✓ Keys generated successfully!\n'));
+          logger.success('✓ Keys generated successfully!\n');
           console.log(chalk.cyan.bold('Public Token:'), chalk.white(response.data.publicToken));
           console.log(chalk.cyan.bold('Private Key: '), chalk.yellow(response.data.privateKey));
           console.log(chalk.red('\n⚠️  CRITICAL: Save your private key now. It is your ONLY proof of identity.'));
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to generate keys');
+          logger.error('Error:', response.error?.message || 'Failed to generate keys');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -82,7 +83,7 @@ export function registerAuthCommands(program: Command): void {
     .option('-r, --reason <text>', 'Reason for registering')
     .action(async (options) => {
       try {
-        console.log(chalk.cyan(`Registering in ${options.network}...`));
+        logger.info(`Registering in ${options.network}...`);
         const client = await AuthHelper.getApiClient();
         const response = await client.post('/v1/auth/register', {
           networkId: options.network,
@@ -101,13 +102,13 @@ export function registerAuthCommands(program: Command): void {
           });
           await configManager.addRegisteredNetwork(options.network, options.reason);
 
-          console.log(chalk.green('✓ Registered successfully!'));
+          logger.success('✓ Registered successfully!');
           console.log(chalk.gray('Credentials saved locally.'));
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Registration failed');
+          logger.error('Error:', response.error?.message || 'Registration failed');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -120,7 +121,7 @@ export function registerAuthCommands(program: Command): void {
     .option('-r, --reason <text>', 'Reason for login')
     .action(async (options) => {
       try {
-        console.log(chalk.cyan(`Logging in to ${options.network}...`));
+        logger.info(`Logging in to ${options.network}...`);
         const client = await AuthHelper.getApiClient();
         const response = await client.post('/v1/auth/login', {
           networkId: options.network,
@@ -139,13 +140,13 @@ export function registerAuthCommands(program: Command): void {
           });
           await configManager.addRegisteredNetwork(options.network, options.reason);
 
-          console.log(chalk.green('✓ Logged in successfully!'));
+          logger.success('✓ Logged in successfully!');
           console.log(chalk.gray('New JWT session established.'));
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Login failed');
+          logger.error('Error:', response.error?.message || 'Login failed');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -155,7 +156,7 @@ export function registerAuthCommands(program: Command): void {
     .requiredOption('-n, --network <id>', 'Network ID')
     .action(async (options) => {
       await configManager.clearCredentials(options.network);
-      console.log(chalk.green('✓ Logged out from network:'), options.network);
+      logger.success(`✓ Logged out from network: ${options.network}`);
     });
 
   auth
@@ -179,7 +180,7 @@ export function registerAuthCommands(program: Command): void {
             console.log(chalk.cyan('Expires:'), new Date(creds.expiresAt).toISOString());
           }
         } else {
-          console.log(chalk.yellow('\nNot connected to network:'), options.network);
+          logger.warn(`\nNot connected to network: ${options.network}`);
         }
       }
     });

@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { configManager, GlobalConfig } from '../config';
-import chalk from 'chalk';
+import { logger } from '../utils/logger';
 
 export interface ApiError {
   code: string;
@@ -27,7 +27,7 @@ export class ApiClient {
   private format: 'toon' | 'json' = 'toon';
 
   constructor(baseUrl: string) {
-    console.log(chalk.gray(`[DEBUG] Initializing ApiClient with baseUrl: ${baseUrl}`));
+    logger.debug(`Initializing ApiClient with baseUrl: ${baseUrl}`);
     this.client = axios.create({
       baseURL: baseUrl,
       timeout: 30000
@@ -35,22 +35,22 @@ export class ApiClient {
 
     // Add request interceptor for logging
     this.client.interceptors.request.use(config => {
-      console.log(chalk.gray(`[DEBUG] API Request: ${config.method?.toUpperCase()} ${config.url}`));
-      if (config.params) console.log(chalk.gray(`[DEBUG] Params: ${JSON.stringify(config.params)}`));
+      logger.debug(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      if (config.params) logger.debug(`Params: ${JSON.stringify(config.params)}`);
       return config;
     });
 
     // Add response interceptor for logging
     this.client.interceptors.response.use(
       response => {
-        console.log(chalk.gray(`[DEBUG] API Response: ${response.status} ${response.config.url}`));
+        logger.debug(`API Response: ${response.status} ${response.config.url}`);
         return response;
       },
       error => {
-        console.log(chalk.red(`[DEBUG] API Error: ${error.message}`));
+        logger.debug(`API Error: ${error.message}`);
         if (error.response) {
-          console.log(chalk.red(`[DEBUG] Status: ${error.response.status}`));
-          console.log(chalk.red(`[DEBUG] Data: ${JSON.stringify(error.response.data)}`));
+          logger.debug(`Status: ${error.response.status}`);
+          logger.debug(`Data: ${JSON.stringify(error.response.data)}`);
         }
         return Promise.reject(error);
       }
@@ -58,7 +58,7 @@ export class ApiClient {
   }
 
   static async create(): Promise<ApiClient> {
-    console.log(chalk.gray('[DEBUG] ApiClient.create() called'));
+    logger.debug('ApiClient.create() called');
     const config = await configManager.getGlobalConfig();
     const client = new ApiClient(config.apiUrl);
     client.format = config.defaultFormat;
@@ -66,17 +66,17 @@ export class ApiClient {
   }
 
   setAuthToken(token: string): void {
-    console.log(chalk.gray('[DEBUG] Setting Auth Token'));
+    logger.debug('Setting Auth Token');
     this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
   clearAuthToken(): void {
-    console.log(chalk.gray('[DEBUG] Clearing Auth Token'));
+    logger.debug('Clearing Auth Token');
     delete this.client.defaults.headers.common['Authorization'];
   }
 
   setFormat(format: 'toon' | 'json'): void {
-    console.log(chalk.gray(`[DEBUG] Setting format to: ${format}`));
+    logger.debug(`Setting format to: ${format}`);
     this.format = format;
   }
 
@@ -129,12 +129,12 @@ export class ApiClient {
   }
 
   private parseResponse<T>(data: string | object): ApiResponse<T> {
-    console.log(chalk.gray(`[DEBUG] Parsing response data (type: ${typeof data})`));
+    logger.debug(`Parsing response data (type: ${typeof data})`);
     if (typeof data === 'string') {
       try {
         return decode<ApiResponse<T>>(data);
       } catch (err) {
-        console.log(chalk.red(`[DEBUG] Parse Error: ${err instanceof Error ? err.message : 'Unknown'}`));
+        logger.debug(`Parse Error: ${err instanceof Error ? err.message : 'Unknown'}`);
         return { success: false, error: { code: 'PARSE_ERROR', message: 'Failed to parse response' } };
       }
     }

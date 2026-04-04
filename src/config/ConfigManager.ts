@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
 import { AuthTokens } from '../datamodel';
-import chalk from 'chalk';
+import { logger } from '../utils/logger';
 
 const CONFIG_DIR = path.join(os.homedir(), '.agenticpool');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -35,7 +35,7 @@ export class ConfigManager {
     if (this.initialized || this.initializing) return;
     
     this.initializing = true;
-    console.log(chalk.gray(`[DEBUG] Initializing ConfigManager. Path: ${CONFIG_DIR}`));
+    logger.debug(`Initializing ConfigManager. Path: ${CONFIG_DIR}`);
     
     try {
       await fs.ensureDir(CONFIG_DIR);
@@ -44,24 +44,23 @@ export class ConfigManager {
       await fs.ensureDir(CACHE_DIR);
       
       if (!(await fs.pathExists(CONFIG_FILE))) {
-        console.log(chalk.gray('[DEBUG] Creating default config file'));
+        logger.debug('Creating default config file');
         const defaultConfig: GlobalConfig = {
           apiUrl: 'https://api.agenticpool.net',
           defaultFormat: 'toon'
         };
-        // Use fs directly to avoid recursion
         await fs.writeJson(CONFIG_FILE, defaultConfig, { spaces: 2 });
       }
 
       if (!(await fs.pathExists(NETWORKS_FILE))) {
-        console.log(chalk.gray('[DEBUG] Creating default networks file'));
+        logger.debug('Creating default networks file');
         await fs.writeFile(NETWORKS_FILE, '# Registered AgenticPool Networks\n\n');
       }
       
       this.initialized = true;
-      console.log(chalk.gray('[DEBUG] ConfigManager initialized'));
+      logger.debug('ConfigManager initialized');
     } catch (e) {
-      console.log(chalk.red(`[DEBUG] ConfigManager init failed: ${e instanceof Error ? e.message : 'Unknown'}`));
+      logger.debug(`ConfigManager init failed: ${e instanceof Error ? e.message : 'Unknown'}`);
       throw e;
     } finally {
       this.initializing = false;
@@ -75,7 +74,7 @@ export class ConfigManager {
 
   async saveGlobalConfig(config: GlobalConfig): Promise<void> {
     await this.init();
-    console.log(chalk.gray('[DEBUG] Saving global config'));
+    logger.debug('Saving global config');
     await fs.writeJson(CONFIG_FILE, config, { spaces: 2 });
   }
 
@@ -105,11 +104,13 @@ export class ConfigManager {
   async saveCredentials(networkId: string, credentials: NetworkCredentials): Promise<void> {
     await this.init();
     const credFile = path.join(CREDENTIALS_DIR, `${networkId}.json`);
+    logger.debug(`Saving credentials for ${networkId}`);
     await fs.writeJson(credFile, credentials, { spaces: 2 });
   }
 
   async addRegisteredNetwork(networkId: string, reason?: string): Promise<void> {
     await this.init();
+    logger.debug(`Registering network in local history: ${networkId}`);
     const content = await fs.readFile(NETWORKS_FILE, 'utf-8');
     const lines = content.split('\n');
     

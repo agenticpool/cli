@@ -4,6 +4,7 @@ import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
 import { limitsManager } from '../limits/LimitsManager';
 import { encode } from '../datamodel';
+import { logger } from '../utils/logger';
 import chalk from 'chalk';
 
 export function registerNetworkCommands(program: Command): void {
@@ -17,6 +18,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (options) => {
       try {
+        logger.info('Fetching public networks...');
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any[]>('/v1/networks', {
           strategy: options.filter,
@@ -25,7 +27,6 @@ export function registerNetworkCommands(program: Command): void {
         });
 
         if (response.success && response.data) {
-          // Filter only requested fields: title (name), id, description, users
           const filteredData = response.data.map(net => ({
             id: net.id,
             title: net.name,
@@ -38,7 +39,7 @@ export function registerNetworkCommands(program: Command): void {
           } else if (options.format === 'toon') {
             console.log(encode(filteredData));
           } else {
-            console.log(chalk.green.bold(`\nFound ${filteredData.length} networks:\n`));
+            logger.success(`\nFound ${filteredData.length} networks:\n`);
             filteredData.forEach((network: any) => {
               console.log(chalk.cyan.bold(network.title || network.id));
               console.log(chalk.gray('  ID:'), network.id);
@@ -48,10 +49,10 @@ export function registerNetworkCommands(program: Command): void {
             });
           }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to list networks');
+          logger.error('Error:', response.error?.message || 'Failed to list networks');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -66,13 +67,14 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (options) => {
       try {
+        logger.info('Creating new network community...');
         const { client } = await AuthHelper.getFirstAuthenticatedClient();
 
         const mineRes = await client.get<any[]>('/v1/networks/mine');
         const currentCount = mineRes.success && mineRes.data ? mineRes.data.length : 0;
         const limitCheck = await limitsManager.canCreateNetwork(currentCount);
         if (!limitCheck.allowed) {
-          console.error(chalk.red('Limit:'), limitCheck.reason);
+          logger.error('Limit:', limitCheck.reason);
           return;
         }
 
@@ -90,14 +92,14 @@ export function registerNetworkCommands(program: Command): void {
           } else if (options.format === 'toon') {
             console.log(encode(response.data));
           } else {
-            console.log(chalk.green('✓ Network created successfully!'));
+            logger.success('✓ Network created successfully!');
             console.log(chalk.gray('ID:'), response.data.id);
           }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to create network');
+          logger.error('Error:', response.error?.message || 'Failed to create network');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -108,6 +110,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (networkId, options) => {
       try {
+        logger.info(`Fetching details for network: ${networkId}...`);
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any>(`/v1/networks/${networkId}`);
 
@@ -131,10 +134,10 @@ export function registerNetworkCommands(program: Command): void {
             }
           }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Network not found');
+          logger.error('Error:', response.error?.message || 'Network not found');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -145,6 +148,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (networkId, options) => {
       try {
+        logger.info(`Fetching profile questions for ${networkId}...`);
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any[]>(`/v1/networks/${networkId}/profile/questions`);
 
@@ -154,20 +158,19 @@ export function registerNetworkCommands(program: Command): void {
           } else if (options.format === 'toon') {
             console.log(encode(response.data));
           } else {
-            console.log(chalk.green.bold(`\nProfile Questions for ${networkId}:\n`));
+            logger.success(`\nProfile Questions for ${networkId}:\n`);
             response.data.forEach((q: any) => {
               console.log(`${chalk.cyan(q.order + '.')} ${q.question}${q.required ? chalk.red(' *') : ''}`);
             });
             console.log();
           }
         } else {
-          // Some networks might not have questions yet, return empty list
           if (options.format === 'json') console.log('[]');
           else if (options.format === 'toon') console.log(encode([]));
-          else console.log(chalk.yellow('No questions found for this network.'));
+          else logger.warn('No questions found for this network.');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -177,6 +180,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (options) => {
       try {
+        logger.info('Fetching your registered networks...');
         const { client } = await AuthHelper.getFirstAuthenticatedClient();
 
         const response = await client.get<any[]>('/v1/networks/mine');
@@ -188,11 +192,11 @@ export function registerNetworkCommands(program: Command): void {
             console.log(encode(response.data));
           } else {
             if (response.data.length === 0) {
-              console.log(chalk.yellow('No networks found.'));
+              logger.warn('No networks found.');
               return;
             }
 
-            console.log(chalk.green.bold(`\nYour networks (${response.data.length}):\n`));
+            logger.success(`\nYour networks (${response.data.length}):\n`);
             response.data.forEach((network: any) => {
               console.log(chalk.cyan.bold(network.name || network.id));
               console.log(chalk.gray('  ID:'), network.id);
@@ -201,10 +205,10 @@ export function registerNetworkCommands(program: Command): void {
             });
           }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to list networks');
+          logger.error('Error:', response.error?.message || 'Failed to list networks');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -215,6 +219,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (networkId, options) => {
       try {
+        logger.info(`Fetching members for ${networkId}...`);
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any[]>(`/v1/networks/${networkId}/members`);
 
@@ -224,7 +229,7 @@ export function registerNetworkCommands(program: Command): void {
           } else if (options.format === 'toon') {
             console.log(encode(response.data));
           } else {
-            console.log(chalk.green.bold(`\nMembers (${response.data.length}):\n`));
+            logger.success(`\nMembers (${response.data.length}):\n`);
             response.data.forEach((member: any) => {
               console.log(chalk.cyan(member.publicToken));
               console.log(chalk.gray('  Role:'), member.role);
@@ -233,10 +238,10 @@ export function registerNetworkCommands(program: Command): void {
             });
           }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to list members');
+          logger.error('Error:', response.error?.message || 'Failed to list members');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -246,26 +251,27 @@ export function registerNetworkCommands(program: Command): void {
     .argument('<networkId>', 'Network ID')
     .action(async (networkId) => {
       try {
+        logger.info(`Joining network community: ${networkId}...`);
         const { client: authClient } = await AuthHelper.getFirstAuthenticatedClient();
         const mineRes = await authClient.get<any[]>('/v1/networks/mine');
         const currentCount = mineRes.success && mineRes.data ? mineRes.data.length : 0;
         const limitCheck = await limitsManager.canJoinNetwork(currentCount);
         if (!limitCheck.allowed) {
-          console.error(chalk.red('Limit:'), limitCheck.reason);
+          logger.error('Limit:', limitCheck.reason);
           return;
         }
 
         const result = await AuthHelper.ensureAuthenticated(networkId);
 
         if (result.isNewUser) {
-          console.log(chalk.green('✓ Joined network successfully!'));
+          logger.success('✓ Joined network successfully!');
         } else {
-          console.log(chalk.green('✓ Already authenticated to network.'));
+          logger.success('✓ Already authenticated to network.');
         }
         console.log(chalk.gray('Network:'), networkId);
         console.log(chalk.gray('Public Token:'), result.credentials.publicToken);
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -278,6 +284,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (options) => {
       try {
+        logger.info(`Running discovery strategy: ${options.strategy}...`);
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any>('/v1/networks/discover', {
           strategy: options.strategy,
@@ -292,7 +299,7 @@ export function registerNetworkCommands(program: Command): void {
             console.log(encode(response.data));
           } else {
             const data = response.data;
-            console.log(chalk.green.bold(`\nDiscovered ${data.totalFound} networks (${options.strategy} strategy):\n`));
+            logger.success(`\nDiscovered ${data.totalFound} networks (${options.strategy} strategy):\n`);
 
             data.networks.forEach((network: any) => {
               console.log(chalk.cyan.bold(network.name || network.id));
@@ -304,7 +311,7 @@ export function registerNetworkCommands(program: Command): void {
             });
 
             if (data.recommendedForYou && data.recommendedForYou.length > 0) {
-              console.log(chalk.yellow.bold('\nRecommended for you:\n'));
+              logger.info('\nRecommended for you:\n');
               data.recommendedForYou.forEach((rec: any) => {
                 console.log(chalk.cyan(`  ${rec.networkId}`));
                 console.log(chalk.gray('  Reason:'), rec.reason);
@@ -313,10 +320,10 @@ export function registerNetworkCommands(program: Command): void {
             }
           }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to discover networks');
+          logger.error('Error:', response.error?.message || 'Failed to discover networks');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 }
