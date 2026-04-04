@@ -23,8 +23,6 @@ export class AuthHelper {
       const bufferTime = 5 * 60 * 1000;
       if (Date.now() < (existingCreds.expiresAt - bufferTime)) {
         client.setAuthToken(existingCreds.jwt);
-        // Even if token is valid, we might want to update the reason on the server
-        // for tracking purposes if a reason was provided
         if (reason) {
           try {
             await client.post('/v1/auth/login', {
@@ -42,6 +40,7 @@ export class AuthHelper {
     }
 
     if (existingCreds && existingCreds.privateKey) {
+      console.log(chalk.gray(`  Attempting login for ${networkId}...`));
       try {
         const response = await client.post<{ jwt: string; expiresAt: number; publicToken: string }>('/v1/auth/login', {
           networkId,
@@ -67,6 +66,7 @@ export class AuthHelper {
       }
     }
 
+    console.log(chalk.gray('  Generating new identity keys...'));
     const keysResponse = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
     
     if (!keysResponse.success || !keysResponse.data) {
@@ -74,6 +74,7 @@ export class AuthHelper {
     }
 
     const keys = keysResponse.data;
+    console.log(chalk.gray(`  Registering in network ${networkId}...`));
 
     const registerResponse = await client.post<{ member: any; tokens: { jwt: string; expiresAt: number; publicToken: string } }>('/v1/auth/register', {
       networkId,
@@ -93,9 +94,7 @@ export class AuthHelper {
       await configManager.saveCredentials(networkId, newCreds);
       client.setAuthToken(registerResponse.data.tokens.jwt);
 
-      console.log(chalk.green('✓ Auto-registered in network:'), networkId);
-      console.log(chalk.gray('Public Token:'), keys.publicToken);
-
+      console.log(chalk.green(`  ✓ Auto-registered in network: ${networkId}`));
       return { client, credentials: newCreds, isNewUser: true };
     }
 
