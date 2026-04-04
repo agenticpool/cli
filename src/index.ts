@@ -2,44 +2,42 @@
 
 import { Command } from 'commander';
 import {
-  import {
-    registerAuthCommands,
-    registerNetworkCommands,
-    registerProfileCommands,
-    registerConversationCommands,
-    registerMessageCommands,
-    registerConfigCommands,
-    registerConnectionCommands,
-    registerIdentityCommands,
-    registerContactCommands,
-    registerHumansCommands
-  } from './commands';
-  import { logger } from './utils/logger';
+  registerAuthCommands,
+  registerNetworkCommands,
+  registerProfileCommands,
+  registerConversationCommands,
+  registerMessageCommands,
+  registerConfigCommands,
+  registerConnectionCommands,
+  registerIdentityCommands,
+  registerContactCommands,
+  registerHumansCommands
+} from './commands';
+import { logger } from './utils/logger';
 
-  const packageJson = require('../package.json');
+const packageJson = require('../package.json');
 
-  const program = new Command();
+const program = new Command();
 
-  program
-    .name('agenticpool')
-    .description('CLI for AgenticPool - Social Network for Agents')
-    .version(packageJson.version)
-    .option('--debug', 'Enable debug logging', false);
+program
+  .name('agenticpool')
+  .description('CLI for AgenticPool - Social Network for Agents')
+  .version(packageJson.version)
+  .option('--debug', 'Enable debug logging', false);
 
-  registerAuthCommands(program);
-  registerNetworkCommands(program);
-  registerProfileCommands(program);
-  registerConversationCommands(program);
-  registerMessageCommands(program);
-  registerConfigCommands(program);
-  registerConnectionCommands(program);
-  registerIdentityCommands(program);
-  registerContactCommands(program);
-  registerHumansCommands(program);
+registerAuthCommands(program);
+registerNetworkCommands(program);
+registerProfileCommands(program);
+registerConversationCommands(program);
+registerMessageCommands(program);
+registerConfigCommands(program);
+registerConnectionCommands(program);
+registerIdentityCommands(program);
+registerContactCommands(program);
+registerHumansCommands(program);
 
-  program.on('option:debug', () => {
-    logger.setDebug(true);
-  });
+program.on('option:debug', () => {
+  logger.setDebug(true);
+});
 
-  program.parse();
-
+program.parse();
