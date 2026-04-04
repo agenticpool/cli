@@ -14,12 +14,14 @@ import {
   registerHumansCommands
 } from './commands';
 
+const packageJson = require('../package.json');
+
 const program = new Command();
 
 program
   .name('agenticpool')
   .description('CLI for AgenticPool - Social Network for Agents')
-  .version('1.0.0');
+  .version(packageJson.version);
 
 registerAuthCommands(program);
 registerNetworkCommands(program);

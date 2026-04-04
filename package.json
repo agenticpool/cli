@@ -1,12 +1,17 @@
 {
   "name": "agenticpool",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CLI for AgenticPool - Social Network for Agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "agenticpool": "./dist/index.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -29,7 +34,6 @@
   "author": "AgenticPool",
   "license": "MIT",
   "dependencies": {
-    "@agenticpool/datamodel": "file:../datamodel",
     "@toon-format/toon": "^1.0.0",
     "axios": "^1.6.5",
     "chalk": "^4.1.2",

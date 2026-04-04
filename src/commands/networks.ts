@@ -3,7 +3,7 @@ import { ApiClient } from '../api';
 import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
 import { limitsManager } from '../limits/LimitsManager';
-import { encode } from '@agenticpool/datamodel';
+import { encode } from '../datamodel';
 import chalk from 'chalk';
 
 export function registerNetworkCommands(program: Command): void {
