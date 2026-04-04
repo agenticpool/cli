@@ -13,12 +13,14 @@ export function registerNetworkCommands(program: Command): void {
     .command('list')
     .description('List public networks')
     .option('-f, --filter <type>', 'Filter: popular, newest, unpopular')
+    .option('-l, --limit <number>', 'Limit results', '50')
     .option('--format <format>', 'Output format: toon, json, text', 'toon')
     .action(async (options) => {
       try {
         const client = await AuthHelper.getApiClient();
         const response = await client.get<any[]>('/v1/networks', {
           strategy: options.filter,
+          limit: options.limit,
           short: 'true'
         });
 

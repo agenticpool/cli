@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
 import { AuthTokens } from '../datamodel';
+import chalk from 'chalk';
 
 const CONFIG_DIR = path.join(os.homedir(), '.agenticpool');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -28,27 +29,43 @@ export interface NetworkCredentials {
 
 export class ConfigManager {
   private initialized = false;
+  private initializing = false;
 
   async init(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized || this.initializing) return;
     
-    await fs.ensureDir(CONFIG_DIR);
-    await fs.ensureDir(CREDENTIALS_DIR);
-    await fs.ensureDir(PROFILES_DIR);
-    await fs.ensureDir(CACHE_DIR);
+    this.initializing = true;
+    console.log(chalk.gray(`[DEBUG] Initializing ConfigManager. Path: ${CONFIG_DIR}`));
     
-    if (!(await fs.pathExists(CONFIG_FILE))) {
-      await this.saveGlobalConfig({
-        apiUrl: 'https://api.agenticpool.net',
-        defaultFormat: 'toon'
-      });
-    }
+    try {
+      await fs.ensureDir(CONFIG_DIR);
+      await fs.ensureDir(CREDENTIALS_DIR);
+      await fs.ensureDir(PROFILES_DIR);
+      await fs.ensureDir(CACHE_DIR);
+      
+      if (!(await fs.pathExists(CONFIG_FILE))) {
+        console.log(chalk.gray('[DEBUG] Creating default config file'));
+        const defaultConfig: GlobalConfig = {
+          apiUrl: 'https://api.agenticpool.net',
+          defaultFormat: 'toon'
+        };
+        // Use fs directly to avoid recursion
+        await fs.writeJson(CONFIG_FILE, defaultConfig, { spaces: 2 });
+      }
 
-    if (!(await fs.pathExists(NETWORKS_FILE))) {
-      await fs.writeFile(NETWORKS_FILE, '# Registered AgenticPool Networks\n\n');
+      if (!(await fs.pathExists(NETWORKS_FILE))) {
+        console.log(chalk.gray('[DEBUG] Creating default networks file'));
+        await fs.writeFile(NETWORKS_FILE, '# Registered AgenticPool Networks\n\n');
+      }
+      
+      this.initialized = true;
+      console.log(chalk.gray('[DEBUG] ConfigManager initialized'));
+    } catch (e) {
+      console.log(chalk.red(`[DEBUG] ConfigManager init failed: ${e instanceof Error ? e.message : 'Unknown'}`));
+      throw e;
+    } finally {
+      this.initializing = false;
     }
-    
-    this.initialized = true;
   }
 
   async getGlobalConfig(): Promise<GlobalConfig> {
@@ -58,6 +75,7 @@ export class ConfigManager {
 
   async saveGlobalConfig(config: GlobalConfig): Promise<void> {
     await this.init();
+    console.log(chalk.gray('[DEBUG] Saving global config'));
     await fs.writeJson(CONFIG_FILE, config, { spaces: 2 });
   }
 
@@ -98,7 +116,6 @@ export class ConfigManager {
     const entryPrefix = `- ${networkId}`;
     const fullEntry = `- ${networkId}${reason ? ` | Reason: ${reason}` : ''}`;
     
-    // Check if network already exists, if so update the line
     const existingIndex = lines.findIndex(line => line.trim().startsWith(entryPrefix));
     
     if (existingIndex !== -1) {
