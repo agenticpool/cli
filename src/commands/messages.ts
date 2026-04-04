@@ -1,6 +1,11 @@
 import { Command } from 'commander';
+import { ApiClient } from '../api';
+import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
+import { encode } from '../datamodel';
+import { logger } from '../utils/logger';
 import chalk from 'chalk';
+import Table from 'cli-table3';
 
 export function registerMessageCommands(program: Command): void {
   const messages = program.command('messages').description('Message commands');
@@ -11,23 +16,31 @@ export function registerMessageCommands(program: Command): void {
     .requiredOption('-n, --network <id>', 'Network ID')
     .requiredOption('-c, --conversation <id>', 'Conversation ID')
     .requiredOption('-m, --message <text>', 'Message content')
-    .option('-t, --to <userId>', 'Recipient (omit for broadcast)')
+    .option('--format <format>', 'Output format: toon, json, human', 'toon')
+    .option('--human', 'Shortcut for --format human')
     .action(async (options) => {
       try {
+        const format = options.human ? 'human' : options.format;
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
 
-        const response = await client.post(`/v1/conversations/${options.network}/${options.conversation}/messages`, {
-          content: options.message,
-          receiverId: options.to || null
+        const response = await client.post('/v1/messages', {
+          conversationId: options.conversation,
+          content: options.message
         });
 
-        if (response.success) {
-          console.log(chalk.green('✓ Message sent!'));
+        if (response.success && response.data) {
+          if (format === 'json') {
+            console.log(JSON.stringify(response.data, null, 2));
+          } else if (format === 'human') {
+            logger.success('✓ Message sent!');
+          } else {
+            console.log(encode(response.data));
+          }
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to send message');
+          logger.error('Error:', response.error?.message || 'Failed to send message');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 
@@ -36,37 +49,45 @@ export function registerMessageCommands(program: Command): void {
     .description('List messages in a conversation')
     .requiredOption('-n, --network <id>', 'Network ID')
     .requiredOption('-c, --conversation <id>', 'Conversation ID')
-    .option('-l, --limit <num>', 'Number of messages', '50')
+    .option('-l, --limit <number>', 'Number of messages to retrieve', '50')
+    .option('--format <format>', 'Output format: toon, json, human', 'toon')
+    .option('--human', 'Shortcut for --format human')
     .action(async (options) => {
       try {
+        const format = options.human ? 'human' : options.format;
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
-        
-        const response = await client.get<any[]>(`/v1/conversations/${options.network}/${options.conversation}/messages`, {
+
+        const response = await client.get<any[]>('/v1/messages', {
+          conversationId: options.conversation,
           limit: options.limit
         });
 
         if (response.success && response.data) {
-          if (response.data.length === 0) {
-            console.log(chalk.yellow('No messages yet.'));
-            return;
+          if (format === 'json') {
+            console.log(JSON.stringify(response.data, null, 2));
+          } else if (format === 'human') {
+            if (response.data.length === 0) {
+              logger.warn('No messages found.');
+              return;
+            }
+            const table = new Table({
+              head: [chalk.cyan('From'), chalk.cyan('Message'), chalk.cyan('Time')],
+              colWidths: [20, 50, 25],
+              wordWrap: true
+            });
+            response.data.forEach(msg => {
+              const date = msg.createdAt?._seconds ? new Date(msg.createdAt._seconds * 1000) : new Date(msg.createdAt);
+              table.push([msg.senderToken, msg.content, date.toLocaleString()]);
+            });
+            console.log(table.toString());
+          } else {
+            console.log(encode(response.data));
           }
-
-          console.log(chalk.green.bold(`\nMessages (${response.data.length}):\n`));
-          
-          response.data.forEach((msg: any) => {
-            const time = msg.createdAt ? new Date(msg.createdAt._seconds * 1000 || msg.createdAt).toLocaleTimeString() : '';
-            const from = chalk.cyan(msg.senderId);
-            const to = msg.receiverId ? chalk.yellow(`→ ${msg.receiverId}`) : chalk.gray('→ all');
-            
-            console.log(`${chalk.gray(`[${time}]`)} ${from} ${to}`);
-            console.log(`  ${msg.content}`);
-            console.log();
-          });
         } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to list messages');
+          logger.error('Error:', response.error?.message || 'Failed to list messages');
         }
       } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       }
     });
 }
