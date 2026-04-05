@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { configManager, GlobalConfig } from '../config';
 import { logger } from '../utils/logger';
+import { encode, decode } from '../datamodel';
 
 export interface ApiError {
   code: string;
@@ -12,14 +13,6 @@ export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: ApiError;
-}
-
-function encode(data: unknown): string {
-  return JSON.stringify(data);
-}
-
-function decode<T = unknown>(str: string): T {
-  return JSON.parse(str) as T;
 }
 
 export class ApiClient {

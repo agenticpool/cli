@@ -68,6 +68,57 @@ export function decode<T = unknown>(str: string): T {
     }
   }
 
+  const lines = str.split("\n");
+  
+  // Detect if it's a top-level object with potential multiline values
+  if (lines.some(l => l.includes(':') && !l.startsWith(' '))) {
+    const result: Record<string, any> = {};
+    let currentKey: string | null = null;
+    let currentValueLines: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+      if (!trimmedLine && !currentKey) continue;
+
+      // If line starts with space, it's a continuation of the previous value
+      if (line.startsWith('  ') && currentKey) {
+        currentValueLines.push(line.substring(2));
+        continue;
+      }
+
+      // If we have a previous key, save its collected value
+      if (currentKey) {
+        result[currentKey] = decodeValue(currentValueLines.join("\n"));
+      }
+
+      // New key:value pair
+      const colonIndex = line.indexOf(":");
+      if (colonIndex > 0) {
+        currentKey = line.substring(0, colonIndex).trim();
+        const firstValuePart = line.substring(colonIndex + 1).trim();
+        currentValueLines = firstValuePart ? [firstValuePart] : [];
+      } else {
+        // Line without colon and not indented? Probably garbage or malformed
+        currentKey = null;
+      }
+    }
+
+    // Save last key
+    if (currentKey) {
+      result[currentKey] = decodeValue(currentValueLines.join("\n"));
+    }
+
+    return result as unknown as T;
+  }
+
+  return decodeValue(trimmed) as unknown as T;
+}
+
+function decodeValue(str: string): any {
+  const trimmed = str.trim();
+  if (!trimmed) return null;
+
   const lines = trimmed.split("\n");
   const firstLine = lines[0].trim();
 
@@ -91,7 +142,7 @@ export function decode<T = unknown>(str: string): T {
         });
         result.push(item);
       }
-      return result as unknown as T;
+      return result;
     }
   }
 
@@ -99,34 +150,13 @@ export function decode<T = unknown>(str: string): T {
   if (firstLine.startsWith("[") && firstLine.includes("]:")) {
     const headerMatch = firstLine.match(/^\[(\d+)\]:(.*)$/);
     if (headerMatch) {
-      const remaining = headerMatch[2] + (lines.length > 1 ? lines.slice(1).join("\n") : "");
+      const remaining = headerMatch[2] + (lines.length > 1 ? "\n" + lines.slice(1).join("\n") : "");
       const values = parseCommaSeparated(remaining.trim());
-      return values.map(parseValue) as unknown as T;
+      return values.map(parseValue);
     }
   }
 
-  // Object key:value
-  if (lines.some(l => l.includes(':'))) {
-    const result: Record<string, any> = {};
-    let hasKeys = false;
-    
-    for (const line of lines) {
-      const part = line.trim();
-      if (!part) continue;
-      
-      const colonIndex = part.indexOf(":");
-      if (colonIndex > 0) {
-        const key = part.substring(0, colonIndex).trim();
-        const value = part.substring(colonIndex + 1).trim();
-        result[key] = parseValue(value);
-        hasKeys = true;
-      }
-    }
-    
-    if (hasKeys) return result as unknown as T;
-  }
-
-  return parseValue(trimmed) as unknown as T;
+  return parseValue(trimmed);
 }
 
 function parseValue(val: string): any {
@@ -135,7 +165,9 @@ function parseValue(val: string): any {
   if (v === "true") return true;
   if (v === "false") return false;
   
-  if (!isNaN(Number(v)) && v !== "") return Number(v);
+  if (!isNaN(Number(v)) && v !== "" && !v.includes('-') && !v.includes(':')) {
+    return Number(v);
+  }
   
   if (v.startsWith('"') && v.endsWith('"')) {
     return v.substring(1, v.length - 1);
