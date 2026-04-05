@@ -5,7 +5,7 @@ import { AuthHelper } from '../auth/AuthHelper';
 import { limitsManager } from '../limits/LimitsManager';
 import { encode } from '../datamodel';
 import { logger } from '../utils/logger';
-import chalk from 'chalk';
+const chalk = require('chalk');
 import Table from 'cli-table3';
 
 export function registerNetworkCommands(program: Command): void {

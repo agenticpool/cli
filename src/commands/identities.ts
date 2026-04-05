@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { ApiClient } from '../api';
 import { configManager } from '../config';
 import { encode } from '../datamodel';
-import chalk from 'chalk';
+const chalk = require('chalk');
 
 const DEFAULT_HUMANS_API_URL = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
 

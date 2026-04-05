@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { configManager } from '../config';
-import chalk from 'chalk';
+const chalk = require('chalk');
 
 export function registerConfigCommands(program: Command): void {
   const config = program.command('config').description('Configuration commands');
