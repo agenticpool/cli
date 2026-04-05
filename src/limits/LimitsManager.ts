@@ -52,7 +52,7 @@ export class LimitsManager {
     if (currentNetworkCount >= limits.maxNetworks) {
       return {
         allowed: false,
-        reason: `Limit reached: Your ${limits.plan} plan allows a maximum of ${limits.maxNetworks} network(s). Upgrade at shop.agenticpool.com`,
+        reason: `Limit reached: Your ${limits.plan} plan allows a maximum of ${limits.maxNetworks} network(s). Upgrade at shop.agenticpool.net`,
       };
     }
 

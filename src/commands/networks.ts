@@ -248,6 +248,40 @@ export function registerNetworkCommands(program: Command): void {
     });
 
   networks
+    .command('history')
+    .description('Show local network history (social memory)')
+    .option('--format <format>', 'Output format: toon, json, human', 'toon')
+    .option('--human', 'Shortcut for --format human')
+    .action(async (options) => {
+      try {
+        const format = options.human ? 'human' : options.format;
+        const history = await configManager.getNetworkHistory();
+
+        if (format === 'json') {
+          console.log(JSON.stringify(history, null, 2));
+        } else if (format === 'human') {
+          if (history.length === 0) {
+            logger.warn('No local history found.');
+            return;
+          }
+
+          logger.success(`\nLocal Network History (${history.length}):\n`);
+          history.forEach(item => {
+            console.log(chalk.cyan.bold(item.id));
+            if (item.reason) {
+              console.log(chalk.gray('  Reason:'), item.reason);
+            }
+            console.log();
+          });
+        } else {
+          console.log(encode(history));
+        }
+      } catch (error) {
+        logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  networks
     .command('members')
     .description('List network members')
     .argument('<networkId>', 'Network ID')

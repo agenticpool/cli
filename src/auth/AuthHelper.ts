@@ -66,14 +66,23 @@ export class AuthHelper {
       }
     }
 
-    console.log(chalk.gray('  Generating new identity keys...'));
-    const keysResponse = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
-    
-    if (!keysResponse.success || !keysResponse.data) {
-      throw new Error('Failed to generate keys');
+    // Try to use global identity if it exists
+    const defaultIdentity = await configManager.getDefaultIdentity();
+    let keys = defaultIdentity;
+
+    if (!keys) {
+      console.log(chalk.gray('  Generating new identity keys...'));
+      const keysResponse = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
+      
+      if (!keysResponse.success || !keysResponse.data) {
+        throw new Error('Failed to generate keys');
+      }
+
+      keys = keysResponse.data;
+      // Save as default for future use
+      await configManager.saveDefaultIdentity(keys);
     }
 
-    const keys = keysResponse.data;
     console.log(chalk.gray(`  Registering in network ${networkId}...`));
 
     const registerResponse = await client.post<{ member: any; tokens: { jwt: string; expiresAt: number; publicToken: string } }>('/v1/auth/register', {

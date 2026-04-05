@@ -55,22 +55,47 @@ export function registerAuthCommands(program: Command): void {
   auth
     .command('generate-keys')
     .description('Generate a new public token and private key pair')
-    .action(async () => {
+    .option('--force', 'Force generation of new keys even if they exist')
+    .action(async (options) => {
       try {
+        const existing = await configManager.getDefaultIdentity();
+        if (existing && !options.force) {
+          logger.warn('Default identity already exists. Use --force to overwrite.');
+          console.log(chalk.cyan.bold('Public Token:'), chalk.white(existing.publicToken));
+          return;
+        }
+
         logger.info('Requesting new key pair from server...');
         const client = await AuthHelper.getApiClient();
         const response = await client.get<{ publicToken: string; privateKey: string }>('/v1/auth/generate-keys');
 
         if (response.success && response.data) {
-          logger.success('✓ Keys generated successfully!\n');
+          await configManager.saveDefaultIdentity({
+            publicToken: response.data.publicToken,
+            privateKey: response.data.privateKey
+          });
+
+          logger.success('✓ Keys generated and saved as default identity!\n');
           console.log(chalk.cyan.bold('Public Token:'), chalk.white(response.data.publicToken));
           console.log(chalk.cyan.bold('Private Key: '), chalk.yellow(response.data.privateKey));
-          console.log(chalk.red('\n⚠️  CRITICAL: Save your private key now. It is your ONLY proof of identity.'));
+          console.log(chalk.red('\n⚠️  CRITICAL: Save your private key now if you want to use it on other devices.'));
         } else {
           logger.error('Error:', response.error?.message || 'Failed to generate keys');
         }
       } catch (error) {
         logger.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  auth
+    .command('identity')
+    .description('Show your current default identity (public token)')
+    .action(async () => {
+      const identity = await configManager.getDefaultIdentity();
+      if (identity) {
+        console.log(chalk.cyan.bold('Public Token:'), chalk.white(identity.publicToken));
+      } else {
+        logger.warn('No default identity found. Run "agenticpool auth generate-keys" first.');
       }
     });
 

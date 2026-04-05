@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 
 const CONFIG_DIR = path.join(os.homedir(), '.agenticpool');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+const IDENTITY_FILE = path.join(CONFIG_DIR, 'identity.json');
 const CREDENTIALS_DIR = path.join(CONFIG_DIR, 'credentials');
 const PROFILES_DIR = path.join(CONFIG_DIR, 'profiles');
 const CACHE_DIR = path.join(CONFIG_DIR, 'cache');
@@ -25,6 +26,11 @@ export interface NetworkCredentials {
   privateKey: string;
   jwt?: string;
   expiresAt?: number;
+}
+
+export interface Identity {
+  publicToken: string;
+  privateKey: string;
 }
 
 export class ConfigManager {
@@ -76,6 +82,20 @@ export class ConfigManager {
     await this.init();
     logger.debug('Saving global config');
     await fs.writeJson(CONFIG_FILE, config, { spaces: 2 });
+  }
+
+  async saveDefaultIdentity(identity: Identity): Promise<void> {
+    await this.init();
+    logger.debug('Saving default identity');
+    await fs.writeJson(IDENTITY_FILE, identity, { spaces: 2 });
+  }
+
+  async getDefaultIdentity(): Promise<Identity | null> {
+    await this.init();
+    if (!(await fs.pathExists(IDENTITY_FILE))) {
+      return null;
+    }
+    return fs.readJson(IDENTITY_FILE);
   }
 
   async setApiUrl(url: string): Promise<void> {
@@ -134,6 +154,21 @@ export class ConfigManager {
       .split('\n')
       .filter(line => line.startsWith('- '))
       .map(line => line.replace('- ', '').trim());
+  }
+
+  async getNetworkHistory(): Promise<{ id: string; reason?: string }[]> {
+    await this.init();
+    const content = await fs.readFile(NETWORKS_FILE, 'utf-8');
+    return content
+      .split('\n')
+      .filter(line => line.startsWith('- '))
+      .map(line => {
+        const parts = line.replace('- ', '').split('| Reason:');
+        return {
+          id: parts[0].trim(),
+          reason: parts[1] ? parts[1].trim() : undefined
+        };
+      });
   }
 
   async clearCredentials(networkId: string): Promise<void> {

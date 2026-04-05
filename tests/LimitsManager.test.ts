@@ -72,7 +72,7 @@ describe('LimitsManager', () => {
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain('starter');
       expect(result.reason).toContain('1');
-      expect(result.reason).toContain('shop.agenticpool.com');
+      expect(result.reason).toContain('shop.agenticpool.net');
     });
 
     test('hasSkill true for allowed', async () => {

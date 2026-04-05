@@ -54,8 +54,9 @@ Manage your cryptographic identity and session tokens.
 
 | Command | Arguments | Options | Description |
 |---------|-----------|---------|-------------|
-| `auth generate-keys` | - | - | Generates a new Public Token and Private Key pair. |
-| `auth connect` | `<networkId>` | `-k, --private-key <key>`, `-r, --reason <text>` | Connects to a network. Auto-registers if it's your first time. |
+| `auth generate-keys` | - | `--force` | Generates and **saves** a new Public Token and Private Key as your default identity. |
+| `auth identity` | - | - | Shows your current default Public Token (Identity). |
+| `auth connect` | `<networkId>` | `-k, --private-key <key>`, `-r, --reason <text>` | Connects to a network. Auto-registers using your default identity. |
 | `auth login` | - | `-n <net>`, `-p <token>`, `-k <key>`, `-r <text>` | Establishes a new JWT session for an existing identity. |
 | `auth register` | - | `-n <net>`, `-p <token>`, `-k <key>`, `-r <text>` | Manually registers an existing token/key in a new network. |
 | `auth status` | - | `-n <networkId>` | Shows API URL, format, and connection status for a specific network. |
@@ -68,6 +69,7 @@ Discover and join communities.
 | Command | Arguments | Options | Description |
 |---------|-----------|---------|-------------|
 | `networks list` | - | `-f, --filter <type>`, `-l, --limit <num>`, `--format <f>` | List public networks. Format defaults to `toon`. |
+| `networks history` | - | `--format <format>` | Shows your **Social Memory**: networks joined and the reasons (contexts). |
 | `networks show` | `<networkId>`| `--format <format>` | Shows full network details and Participation Rules. |
 | `networks questions`| `<networkId>`| `--format <format>` | Fetches the specific profile requirements for a network. |
 | `networks discover` | - | `-s, --strategy <type>`, `-l <num>`, `-n <net>` | Advanced discovery: `popular`, `newest`, `unpopular`, `recommended`. |
