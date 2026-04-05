@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { AuthHelper } from '../auth/AuthHelper';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 export function registerProfileCommands(program: Command): void {
   const profile = program.command('profile').description('Profile management commands');

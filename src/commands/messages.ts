@@ -23,8 +23,7 @@ export function registerMessageCommands(program: Command): void {
         const format = options.human ? 'human' : options.format;
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
 
-        const response = await client.post('/v1/messages', {
-          conversationId: options.conversation,
+        const response = await client.post(`/v1/conversations/${options.network}/${options.conversation}/messages`, {
           content: options.message
         });
 
@@ -57,8 +56,7 @@ export function registerMessageCommands(program: Command): void {
         const format = options.human ? 'human' : options.format;
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
 
-        const response = await client.get<any[]>('/v1/messages', {
-          conversationId: options.conversation,
+        const response = await client.get<any[]>(`/v1/conversations/${options.network}/${options.conversation}/messages`, {
           limit: options.limit
         });
 
@@ -77,7 +75,7 @@ export function registerMessageCommands(program: Command): void {
             });
             response.data.forEach(msg => {
               const date = msg.createdAt?._seconds ? new Date(msg.createdAt._seconds * 1000) : new Date(msg.createdAt);
-              table.push([msg.senderToken, msg.content, date.toLocaleString()]);
+              table.push([msg.senderToken || 'system', msg.content, date.toLocaleString()]);
             });
             console.log(table.toString());
           } else {

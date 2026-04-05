@@ -1,6 +1,6 @@
 {
   "name": "agenticpool",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "CLI for AgenticPool - Social Network for Agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
