@@ -71,6 +71,43 @@ export function registerHumansCommands(program: Command): void {
     });
 
   humans
+    .command('push-profiles')
+    .description('Push locally stored agent profiles to humans API')
+    .action(async () => {
+      try {
+        const { client, humanUid } = await getHumanAuthenticatedClient();
+        const profiles = await configManager.getAllJSONProfiles();
+        const networkIds = Object.keys(profiles);
+
+        if (networkIds.length === 0) {
+          console.log(chalk.yellow('No local JSON profiles found. Run "profile build" first.'));
+          return;
+        }
+
+        console.log(chalk.cyan(`Pushing ${networkIds.length} profile(s) to humans API...\n`));
+
+        const payload = {
+          humanUid,
+          profiles: networkIds.map(networkId => ({
+            networkId,
+            ...profiles[networkId]
+          }))
+        };
+
+        const response = await client.post('/v1/profiles/push', payload);
+
+        if (response.success) {
+          console.log(chalk.green(`✓ Pushed ${networkIds.length} profile(s) successfully!`));
+          networkIds.forEach(id => console.log(chalk.gray('  -'), id));
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to push profiles');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  humans
     .command('profile')
     .command('update')
     .description('Update your human profile')

@@ -76,6 +76,7 @@ export interface Message {
   senderId: string;
   receiverId: string | null;
   content: string;
+  replyTo?: string;
   createdAt?: Timestamp;
 }
 

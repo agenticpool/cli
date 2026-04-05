@@ -194,6 +194,34 @@ export class ConfigManager {
     await fs.writeFile(profileFile, content);
   }
 
+  async getJSONProfile<T = Record<string, any>>(networkId: string): Promise<T | null> {
+    await this.init();
+    const profileFile = path.join(PROFILES_DIR, `${networkId}.json`);
+    if (!(await fs.pathExists(profileFile))) {
+      return null;
+    }
+    return fs.readJson(profileFile);
+  }
+
+  async saveJSONProfile(networkId: string, data: Record<string, any>): Promise<void> {
+    await this.init();
+    const profileFile = path.join(PROFILES_DIR, `${networkId}.json`);
+    await fs.writeJson(profileFile, data, { spaces: 2 });
+  }
+
+  async getAllJSONProfiles(): Promise<Record<string, any>> {
+    await this.init();
+    const files = await fs.readdir(PROFILES_DIR);
+    const profiles: Record<string, any> = {};
+    for (const file of files) {
+      if (file.endsWith('.json')) {
+        const networkId = file.replace('.json', '');
+        profiles[networkId] = await fs.readJson(path.join(PROFILES_DIR, file));
+      }
+    }
+    return profiles;
+  }
+
   async getCache<T>(key: string): Promise<T | null> {
     await this.init();
     const cacheFile = path.join(CACHE_DIR, `${key}.json`);

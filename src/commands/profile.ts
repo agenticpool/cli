@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { AuthHelper } from '../auth/AuthHelper';
+import { configManager } from '../config';
 const chalk = require('chalk');
 
 export function registerProfileCommands(program: Command): void {
@@ -148,6 +149,14 @@ export function registerProfileCommands(program: Command): void {
 
         if (completeResponse.success && completeResponse.data) {
           const data = completeResponse.data as any;
+
+          await configManager.saveJSONProfile(options.network, {
+            networkId: options.network,
+            answers,
+            completionPercentage: data.completionPercentage,
+            completedAt: new Date().toISOString()
+          });
+
           console.log(chalk.green('✓ Profile built successfully!\n'));
           console.log(chalk.cyan('Completion:'), `${data.completionPercentage}%`);
 

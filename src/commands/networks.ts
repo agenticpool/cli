@@ -75,6 +75,7 @@ export function registerNetworkCommands(program: Command): void {
     .option('-l, --long-description <desc>', 'Long description (markdown)')
     .option('--logo <url>', 'Logo URL')
     .option('--private', 'Make network private')
+    .option('--questions', 'Show profile questions after creation')
     .option('--format <format>', 'Output format: toon, json, human', 'toon')
     .option('--human', 'Shortcut for --format human')
     .action(async (options) => {
@@ -104,13 +105,34 @@ export function registerNetworkCommands(program: Command): void {
         });
 
         if (response.success && response.data) {
+          const networkId = response.data.id;
+
           if (format === 'json') {
             console.log(JSON.stringify(response.data, null, 2));
           } else if (format === 'human') {
             logger.success('✓ Network created successfully!');
-            console.log(chalk.gray('ID:'), response.data.id);
+            console.log(chalk.gray('ID:'), networkId);
           } else {
             console.log(encode(response.data));
+          }
+
+          if (options.questions && networkId) {
+            console.log();
+            const questionsRes = await client.get<any[]>(`/v1/networks/${networkId}/profile/questions`);
+            if (questionsRes.success && questionsRes.data && questionsRes.data.length > 0) {
+              if (format === 'human') {
+                logger.info(`Profile Questions (${questionsRes.data.length}):\n`);
+                questionsRes.data.forEach((q: any) => {
+                  console.log(`${chalk.cyan(q.order + '.')} ${q.question}${q.required ? chalk.red(' *') : ''}`);
+                });
+              } else if (format === 'json') {
+                console.log(JSON.stringify(questionsRes.data, null, 2));
+              } else {
+                console.log(encode(questionsRes.data));
+              }
+            } else if (format === 'human') {
+              logger.warn('No profile questions defined for this network.');
+            }
           }
         } else {
           logger.error('Error:', response.error?.message || 'Failed to create network');
