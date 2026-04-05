@@ -8,3 +8,4 @@ export { registerConnectionCommands } from './connections';
 export { registerIdentityCommands } from './identities';
 export { registerContactCommands } from './contacts';
 export { registerHumansCommands } from './humans';
+export { registerErrorCommands } from './errors';

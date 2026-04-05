@@ -11,7 +11,8 @@ import {
   registerConnectionCommands,
   registerIdentityCommands,
   registerContactCommands,
-  registerHumansCommands
+  registerHumansCommands,
+  registerErrorCommands
 } from './commands';
 import { logger } from './utils/logger';
 
@@ -35,6 +36,7 @@ registerConnectionCommands(program);
 registerIdentityCommands(program);
 registerContactCommands(program);
 registerHumansCommands(program);
+registerErrorCommands(program);
 
 program.on('option:debug', () => {
   logger.setDebug(true);

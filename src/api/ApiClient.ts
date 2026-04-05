@@ -123,14 +123,55 @@ export class ApiClient {
 
   private parseResponse<T>(data: string | object): ApiResponse<T> {
     logger.debug(`Parsing response data (type: ${typeof data})`);
-    if (typeof data === 'string') {
+    if (typeof data !== 'string') {
+      return data as ApiResponse<T>;
+    }
+
+    const trimmed = data.trim();
+
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
       try {
-        return decode<ApiResponse<T>>(data);
-      } catch (err) {
-        logger.debug(`Parse Error: ${err instanceof Error ? err.message : 'Unknown'}`);
+        return JSON.parse(trimmed) as ApiResponse<T>;
+      } catch {
+        return { success: false, error: { code: 'PARSE_ERROR', message: 'Failed to parse JSON response' } };
+      }
+    }
+
+    if (trimmed.startsWith('<') || trimmed.startsWith('<!DOCTYPE')) {
+      return { success: false, error: { code: 'PARSE_ERROR', message: 'Received HTML instead of API response' } };
+    }
+
+    try {
+      return decode<ApiResponse<T>>(trimmed);
+    } catch {
+      try {
+        return JSON.parse(trimmed) as ApiResponse<T>;
+      } catch {
         return { success: false, error: { code: 'PARSE_ERROR', message: 'Failed to parse response' } };
       }
     }
-    return data as ApiResponse<T>;
+  }
+
+  async reportError(errorContext: {
+    command: string;
+    errorCode: string;
+    errorMessage: string;
+    stackTrace?: string;
+    cliVersion: string;
+    nodeVersion: string;
+    os: string;
+    arch: string;
+    agentModel?: string;
+    agentName?: string;
+    tags?: string[];
+  }): Promise<void> {
+    try {
+      const savedFormat = this.format;
+      this.format = 'json';
+      await this.post('/v1/errors', errorContext);
+      this.format = savedFormat;
+    } catch {
+      // Silent — never block CLI for error reporting
+    }
   }
 }
