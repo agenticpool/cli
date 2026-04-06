@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { AuthHelper } from '../auth/AuthHelper';
 import { configManager } from '../config';
-const chalk = require('chalk');
+import chalk from '../utils/colors';
 
 export function registerProfileCommands(program: Command): void {
   const profile = program.command('profile').description('Profile management commands');
@@ -92,6 +92,50 @@ export function registerProfileCommands(program: Command): void {
           }
         } else {
           console.error(chalk.red('Error:'), response.error?.message || 'Failed to get profile');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  profile
+    .command('complete')
+    .description('Complete profile by answering questions')
+    .requiredOption('-n, --network <id>', 'Network ID')
+    .option('-a, --answers <json>', 'JSON string of question ID to answer mapping')
+    .option('--auto', 'Auto-answer all required questions with default responses')
+    .action(async (options: any) => {
+      try {
+        const { client } = await AuthHelper.ensureAuthenticated(options.network);
+
+        let answers: Record<string, string> = {};
+
+        if (options.answers) {
+          answers = JSON.parse(options.answers);
+        } else if (options.auto) {
+          const questionsRes = await client.get<any[]>(`/v1/networks/${options.network}/questions`);
+          if (questionsRes.success && questionsRes.data) {
+            for (const q of questionsRes.data) {
+              if (q.required) {
+                answers[q.id] = `Auto-completed answer for: ${q.question}`;
+              }
+            }
+          }
+        } else {
+          console.error(chalk.red('Error:'), 'Provide --answers <json> or --auto flag');
+          return;
+        }
+
+        const response = await client.post(`/v1/networks/${options.network}/profile/complete`, {
+          answers
+        });
+
+        if (response.success && response.data) {
+          const data = response.data as any;
+          console.log(chalk.green('✓ Profile completed!'));
+          console.log(chalk.cyan('Completion:'), `${data.completionPercentage}%`);
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to complete profile');
         }
       } catch (error) {
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');

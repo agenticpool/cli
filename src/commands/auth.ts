@@ -3,7 +3,7 @@ import { ApiClient } from '../api';
 import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
 import { logger } from '../utils/logger';
-const chalk = require('chalk');
+import chalk from '../utils/colors';
 
 export function registerAuthCommands(program: Command): void {
   const auth = program.command('auth').description('Authentication commands');

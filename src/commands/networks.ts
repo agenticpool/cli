@@ -5,7 +5,7 @@ import { AuthHelper } from '../auth/AuthHelper';
 import { limitsManager } from '../limits/LimitsManager';
 import { encode } from '../datamodel';
 import { logger } from '../utils/logger';
-const chalk = require('chalk');
+import chalk from '../utils/colors';
 import Table from 'cli-table3';
 
 export function registerNetworkCommands(program: Command): void {
@@ -389,6 +389,7 @@ export function registerNetworkCommands(program: Command): void {
         }
 
         const client = await AuthHelper.getApiClient();
+        client.setFormat('json');
         const response = await client.get<any>('/v1/networks/discover', {
           strategy: options.strategy,
           limit: options.limit,

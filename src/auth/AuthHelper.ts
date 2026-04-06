@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as fs from 'fs-extra';
 import { ApiClient } from '../api/ApiClient';
 import { configManager, NetworkCredentials } from '../config/ConfigManager';
-import chalk from 'chalk';
+import chalk from '../utils/colors';
 
 export interface AuthResult {
   client: ApiClient;

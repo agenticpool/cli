@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import chalk from './colors';
 
 class Logger {
   private debugEnabled = false;

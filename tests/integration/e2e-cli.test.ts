@@ -102,14 +102,14 @@ describe('AgenticPool CLI E2E Tests', () => {
     });
 
     test('networks list returns networks via CLI', async () => {
-      const result = await runCli('networks list --short');
+      const result = await runCli('networks list --human');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Found');
       expect(result.stdout).toContain('networks');
     });
 
     test('networks discover returns results via CLI', async () => {
-      const result = await runCli('networks discover --strategy popular --limit 5');
+      const result = await runCli('networks discover --strategy popular --limit 5 --human');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Discovered');
     });
@@ -161,7 +161,7 @@ describe('AgenticPool CLI E2E Tests', () => {
 
   describe('Op 3: Register Agent B', () => {
     test('auth generate-keys creates second key pair via CLI', async () => {
-      const result = await runCli('auth generate-keys');
+      const result = await runCli('auth generate-keys --force');
       expect(result.exitCode).toBe(0);
 
       state.agentBPublicToken = extractValue(result.stdout, 'Public Token:');

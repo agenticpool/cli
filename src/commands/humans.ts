@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { ApiClient } from '../api';
 import { configManager } from '../config';
-const chalk = require('chalk');
+import chalk from '../utils/colors';
 
 const DEFAULT_HUMANS_API_URL = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
 
@@ -43,8 +43,9 @@ export function registerHumansCommands(program: Command): void {
       }
     });
 
-  humans
-    .command('profile')
+  const myProfile = humans.command('my-profile').description('Manage your human profile');
+
+  myProfile
     .command('get')
     .description('Get your human profile')
     .action(async () => {
@@ -64,6 +65,39 @@ export function registerHumansCommands(program: Command): void {
           if (profile.notes) console.log(chalk.gray('Notes:'), profile.notes);
         } else {
           console.error(chalk.red('Error:'), response.error?.message || 'Failed to get profile');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  myProfile
+    .command('update')
+    .description('Update your human profile')
+    .option('--display-name <name>', 'Display name')
+    .option('--phone <phone>', 'Phone number')
+    .option('--email <email>', 'Email address')
+    .option('--telegram <handle>', 'Telegram handle')
+    .option('--photo-url <url>', 'Photo URL')
+    .option('--notes <text>', 'Notes')
+    .action(async (options) => {
+      try {
+        const { client } = await getHumanAuthenticatedClient();
+
+        const body: any = {};
+        if (options.displayName) body.displayName = options.displayName;
+        if (options.phone) body.phone = options.phone;
+        if (options.email) body.email = options.email;
+        if (options.telegram) body.telegram = options.telegram;
+        if (options.photoUrl) body.photoUrl = options.photoUrl;
+        if (options.notes) body.notes = options.notes;
+
+        const response = await client.put('/v1/profile', body);
+
+        if (response.success) {
+          console.log(chalk.green('✓ Profile updated!'));
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to update profile');
         }
       } catch (error) {
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
@@ -101,40 +135,6 @@ export function registerHumansCommands(program: Command): void {
           networkIds.forEach(id => console.log(chalk.gray('  -'), id));
         } else {
           console.error(chalk.red('Error:'), response.error?.message || 'Failed to push profiles');
-        }
-      } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
-      }
-    });
-
-  humans
-    .command('profile')
-    .command('update')
-    .description('Update your human profile')
-    .option('--display-name <name>', 'Display name')
-    .option('--phone <phone>', 'Phone number')
-    .option('--email <email>', 'Email address')
-    .option('--telegram <handle>', 'Telegram handle')
-    .option('--photo-url <url>', 'Photo URL')
-    .option('--notes <text>', 'Notes')
-    .action(async (options) => {
-      try {
-        const { client } = await getHumanAuthenticatedClient();
-
-        const body: any = {};
-        if (options.displayName) body.displayName = options.displayName;
-        if (options.phone) body.phone = options.phone;
-        if (options.email) body.email = options.email;
-        if (options.telegram) body.telegram = options.telegram;
-        if (options.photoUrl) body.photoUrl = options.photoUrl;
-        if (options.notes) body.notes = options.notes;
-
-        const response = await client.put('/v1/profile', body);
-
-        if (response.success) {
-          console.log(chalk.green('✓ Profile updated!'));
-        } else {
-          console.error(chalk.red('Error:'), response.error?.message || 'Failed to update profile');
         }
       } catch (error) {
         console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');

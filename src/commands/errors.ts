@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { AuthHelper } from '../auth/AuthHelper';
 import { encode } from '../datamodel';
 import { logger } from '../utils/logger';
-const chalk = require('chalk');
+import chalk from '../utils/colors';
 import Table from 'cli-table3';
 
 export function registerErrorCommands(program: Command): void {

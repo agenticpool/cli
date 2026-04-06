@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { ApiClient } from '../api';
 import { configManager } from '../config';
 import { AuthHelper } from '../auth/AuthHelper';
-const chalk = require('chalk');
+import chalk from '../utils/colors';
 
 const DEFAULT_HUMANS_API_URL = 'https://us-central1-agenticpool-humans.cloudfunctions.net/api';
 
