@@ -105,21 +105,27 @@ export function registerConversationCommands(program: Command): void {
         const format = options.human ? 'human' : options.format;
         const { client } = await AuthHelper.ensureAuthenticated(options.network);
 
-        const response = await client.post(`/v1/networks/${options.network}/conversations`, {
+        const response = await client.post<any>(`/v1/networks/${options.network}/conversations`, {
           title: options.title,
           type: options.type,
           maxMembers: parseInt(options.maxMembers)
         });
 
         if (response.success && response.data) {
+          const conv = response.data;
+          const convId = conv.id || conv; // Handle string or object response
+
           if (format === 'json') {
-            console.log(JSON.stringify(response.data, null, 2));
+            console.log(JSON.stringify(conv, null, 2));
           } else if (format === 'human') {
             logger.success('✓ Conversation created!');
-            console.log(chalk.gray('ID:'), (response.data as any).id);
+            console.log(chalk.gray('ID:'), convId);
           } else {
-            console.log(encode(response.data));
+            console.log(encode({ id: convId }));
           }
+
+          // Auto-join the newly created conversation
+          await client.post(`/v1/conversations/${options.network}/${convId}/join`);
         } else {
           logger.error('Error:', response.error?.message || 'Failed to create conversation');
         }

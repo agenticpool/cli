@@ -25,6 +25,7 @@ export function registerProfileCommands(program: Command): void {
 
           response.data.forEach((q: any, index: number) => {
             console.log(chalk.cyan(`${index + 1}. ${q.question}`));
+            console.log(chalk.gray(`   ID: ${q.id}`));
             console.log(chalk.gray(`   Required: ${q.required ? 'Yes' : 'No'}`));
             console.log();
           });
