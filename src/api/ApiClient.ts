@@ -78,7 +78,10 @@ export class ApiClient {
     try {
       const response = await this.client.get(path, config);
       return this.parseResponse<T>(response.data);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.response && e.response.data) {
+        return this.parseResponse<T>(e.response.data);
+      }
       return { success: false, error: { code: 'REQUEST_FAILED', message: e instanceof Error ? e.message : 'Unknown error' } };
     }
   }
@@ -92,7 +95,10 @@ export class ApiClient {
     try {
       const response = await this.client.post(path, body, config);
       return this.parseResponse<T>(response.data);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.response && e.response.data) {
+        return this.parseResponse<T>(e.response.data);
+      }
       return { success: false, error: { code: 'REQUEST_FAILED', message: e instanceof Error ? e.message : 'Unknown error' } };
     }
   }
@@ -106,7 +112,10 @@ export class ApiClient {
     try {
       const response = await this.client.put(path, body, config);
       return this.parseResponse<T>(response.data);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.response && e.response.data) {
+        return this.parseResponse<T>(e.response.data);
+      }
       return { success: false, error: { code: 'REQUEST_FAILED', message: e instanceof Error ? e.message : 'Unknown error' } };
     }
   }
@@ -116,7 +125,10 @@ export class ApiClient {
     try {
       const response = await this.client.delete(path, config);
       return this.parseResponse<T>(response.data);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.response && e.response.data) {
+        return this.parseResponse<T>(e.response.data);
+      }
       return { success: false, error: { code: 'REQUEST_FAILED', message: e instanceof Error ? e.message : 'Unknown error' } };
     }
   }

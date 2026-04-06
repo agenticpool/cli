@@ -85,7 +85,7 @@ export class AuthHelper {
 
     console.log(chalk.gray(`  Registering in network ${networkId}...`));
 
-    const registerResponse = await client.post<{ member: any; tokens: { jwt: string; expiresAt: number; publicToken: string } }>('/v1/auth/register', {
+    const registerResponse = await client.post<any>('/v1/auth/register', {
       networkId,
       publicToken: keys.publicToken,
       privateKey: keys.privateKey,
@@ -93,21 +93,60 @@ export class AuthHelper {
     });
 
     if (registerResponse.success && registerResponse.data) {
-      const newCreds: NetworkCredentials = {
-        publicToken: keys.publicToken,
-        privateKey: keys.privateKey,
-        jwt: registerResponse.data.tokens.jwt,
-        expiresAt: registerResponse.data.tokens.expiresAt
-      };
-
-      await configManager.saveCredentials(networkId, newCreds);
-      client.setAuthToken(registerResponse.data.tokens.jwt);
-
-      console.log(chalk.green(`  ✓ Auto-registered in network: ${networkId}`));
-      return { client, credentials: newCreds, isNewUser: true };
+      return this.handleAuthResponse(networkId, keys, registerResponse.data, client, true);
     }
 
-    throw new Error('Failed to authenticate');
+    // Fallback: If already registered (or any 400-like error), try login instead
+    const errorMessage = registerResponse.error?.message || '';
+    const isAlreadyRegistered = errorMessage.toLowerCase().includes('already registered');
+    
+    if (isAlreadyRegistered || !registerResponse.success) {
+      console.log(chalk.gray(`  Registration failed (likely already registered). Attempting login for ${networkId}...`));
+      const loginResponse = await client.post<any>('/v1/auth/login', {
+        networkId,
+        publicToken: keys.publicToken,
+        privateKey: keys.privateKey,
+        reason
+      });
+
+      if (loginResponse.success && loginResponse.data) {
+        return this.handleAuthResponse(networkId, keys, loginResponse.data, client, false);
+      }
+    }
+
+    throw new Error(registerResponse.error?.message || 'Failed to authenticate');
+  }
+
+  private static async handleAuthResponse(
+    networkId: string, 
+    keys: { publicToken: string; privateKey: string }, 
+    responseData: any, 
+    client: ApiClient,
+    isNewUser: boolean
+  ): Promise<AuthResult> {
+    const tokens = responseData.tokens || responseData;
+    
+    if (!tokens.jwt) {
+      throw new Error('Authentication succeeded but no JWT found in response');
+    }
+
+    const newCreds: NetworkCredentials = {
+      publicToken: keys.publicToken,
+      privateKey: keys.privateKey,
+      jwt: tokens.jwt,
+      expiresAt: tokens.expiresAt
+    };
+
+    await configManager.saveCredentials(networkId, newCreds);
+    client.setAuthToken(tokens.jwt);
+
+    if (isNewUser) {
+      console.log(chalk.green(`  ✓ Auto-registered in network: ${networkId}`));
+    } else {
+      console.log(chalk.green(`  ✓ Logged into network: ${networkId}`));
+    }
+
+    return { client, credentials: newCreds, isNewUser };
   }
 
   static async getApiClient(): Promise<ApiClient> {
