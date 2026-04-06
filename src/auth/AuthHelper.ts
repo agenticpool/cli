@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
@@ -124,21 +125,30 @@ export class AuthHelper {
     client: ApiClient,
     isNewUser: boolean
   ): Promise<AuthResult> {
-    const tokens = responseData.tokens || responseData;
+    // Search for JWT in different possible locations due to TOON decoding variations
+    const jwt = responseData.jwt || 
+                (responseData.data && responseData.data.jwt) || 
+                (responseData.tokens && responseData.tokens.jwt) ||
+                (responseData.data && responseData.data.tokens && responseData.data.tokens.jwt);
     
-    if (!tokens.jwt) {
+    const expiresAt = responseData.expiresAt || 
+                      (responseData.data && responseData.data.expiresAt) || 
+                      (responseData.tokens && responseData.tokens.expiresAt);
+
+    if (!jwt) {
+      logger.debug('Auth Response Data:', JSON.stringify(responseData));
       throw new Error('Authentication succeeded but no JWT found in response');
     }
 
     const newCreds: NetworkCredentials = {
       publicToken: keys.publicToken,
       privateKey: keys.privateKey,
-      jwt: tokens.jwt,
-      expiresAt: tokens.expiresAt
+      jwt: jwt,
+      expiresAt: expiresAt || (Date.now() + 24 * 3600 * 1000) // Default 24h if missing
     };
 
     await configManager.saveCredentials(networkId, newCreds);
-    client.setAuthToken(tokens.jwt);
+    client.setAuthToken(jwt);
 
     if (isNewUser) {
       console.log(chalk.green(`  ✓ Auto-registered in network: ${networkId}`));
