@@ -13,7 +13,7 @@ export function encode(data: unknown): string {
       const keys = Object.keys(firstItem);
       const header = `[${data.length}]{${keys.join(",")}}:`;
       const lines = data.map((item) => {
-        const values = keys.map((key) => encode(item[key]));
+        const values = keys.map((key) => encode((item as any)[key]));
         return values.join(",");
       });
       return header + "\n" + lines.map((line) => `  ${line}`).join("\n");
@@ -22,7 +22,7 @@ export function encode(data: unknown): string {
   }
   if (typeof data === "object") {
     const obj = data as Record<string, unknown>;
-    const keys = Object.keys(obj).filter(k => obj[k] !== undefined);
+    const keys = Object.keys(obj).filter(k => obj[k] !== undefined && !k.startsWith('_'));
     if (keys.length === 0) return "{}";
     const lines = keys.map((key) => {
       const val = encode(obj[key]);
@@ -47,23 +47,31 @@ export function decode<T = unknown>(str: string): T {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line.trim()) continue;
+    if (!line.trim() && !line.startsWith(" ")) continue;
+
     const colonIndex = line.indexOf(":");
+    // A key:value pair must have a colon and the key shouldn't start with space (top-level)
     if (colonIndex > 0 && !line.startsWith(" ")) {
       const key = line.substring(0, colonIndex).trim();
       let valuePart = line.substring(colonIndex + 1).trim();
+
+      // Check if it's a multiline/nested block (next lines are indented)
       if (i + 1 < lines.length && lines[i+1].startsWith("  ")) {
         const nestedLines = [];
         if (valuePart) nestedLines.push(valuePart);
         let j = i + 1;
         while (j < lines.length && (lines[j].startsWith("  ") || !lines[j].trim())) {
-          if (lines[j].trim()) nestedLines.push(lines[j].substring(2));
-          else nestedLines.push("");
+          if (lines[j].startsWith("  ")) {
+            nestedLines.push(lines[j].substring(2));
+          } else {
+            nestedLines.push("");
+          }
           j++;
         }
         i = j - 1;
         result[key] = decodeValue(nestedLines.join("\n"));
       } else {
+        // Just a regular value on the same line
         result[key] = decodeValue(valuePart);
       }
       hasKeyValues = true;
@@ -71,10 +79,10 @@ export function decode<T = unknown>(str: string): T {
   }
 
   if (hasKeyValues) {
-    // Flatten logic for common API patterns like data:publicToken:xyz
+    // Specific logic for common API patterns: if root has 'data' and 'success', and 'data' is an object,
+    // merge 'data' properties into root IF it helps matching the expected interface
     if (result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
-      // Merge properties from 'data' into top level if they don't collide
-      // OR specifically for generate-keys pattern:
+      // For generate-keys pattern: Merge privateKey into data
       if (result.privateKey && !result.data.privateKey) {
         result.data.privateKey = result.privateKey;
       }
@@ -90,9 +98,10 @@ function decodeValue(str: string): any {
   if (trimmed === "true") return true;
   if (trimmed === "false") return false;
 
-  const lines = trimmed.split("\n");
+  const lines = str.split("\n");
   const firstLine = lines[0].trim();
 
+  // Tabular array [count]{key1,key2}:
   if (firstLine.startsWith("[") && firstLine.includes("]{")) {
     const headerMatch = firstLine.match(/^\[(\d+)\]\{([^}]+)\}:?$/);
     if (headerMatch) {
@@ -112,6 +121,7 @@ function decodeValue(str: string): any {
     }
   }
 
+  // Simple array [count]:val1,val2
   if (firstLine.startsWith("[") && firstLine.includes("]:")) {
     const headerMatch = firstLine.match(/^\[(\d+)\]:(.*)$/);
     if (headerMatch) {
@@ -120,6 +130,12 @@ function decodeValue(str: string): any {
     }
   }
 
+  // If it's a multiline string that isn't a tabular array, it might be an object
+  if (lines.length > 1 && lines.some(l => l.includes(":") && !l.startsWith(" "))) {
+    return decode(str);
+  }
+
+  // If it still looks like an object (key:value) but was passed as a single line value
   if (trimmed.includes(":") && !trimmed.startsWith('"') && !trimmed.includes("\n")) {
     const res: Record<string, any> = {};
     const parts = parseCommaSeparated(trimmed);
@@ -138,12 +154,19 @@ function decodeValue(str: string): any {
 }
 
 function parseValue(val: string): any {
-  const v = val.trim();
+  let v = val.trim();
   if (!v || v === "null") return null;
   if (v === "true" || v === '"true"') return true;
   if (v === "false" || v === '"false"') return false;
-  if (v.startsWith('"') && v.endsWith('"')) return v.substring(1, v.length - 1);
-  if (/^-?\d+(\.\d+)?$/.test(v) && v.length < 15) return Number(v);
+  
+  if (v.startsWith('"') && v.endsWith('"')) {
+    return v.substring(1, v.length - 1);
+  }
+
+  if (/^-?\d+(\.\d+)?$/.test(v) && v.length < 15) {
+    return Number(v);
+  }
+  
   return v;
 }
 

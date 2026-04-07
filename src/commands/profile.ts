@@ -100,6 +100,41 @@ export function registerProfileCommands(program: Command): void {
     });
 
   profile
+    .command('show')
+    .description("Show another swimmer's public profile")
+    .requiredOption('-n, --network <id>', 'Network ID')
+    .requiredOption('-p, --public-token <token>', 'Public Token of the swimmer')
+    .action(async (options: any) => {
+      try {
+        const { client } = await AuthHelper.ensureAuthenticated(options.network);
+
+        const response = await client.get<any>(`/v1/networks/${options.network}/members/${options.publicToken}/profile`);
+
+        if (response.success && response.data) {
+          const profile = response.data;
+          console.log(chalk.cyan.bold(`\nPublic Profile: ${options.publicToken}\n`));
+          console.log(chalk.gray('Short Description:'), profile.shortDescription || '(none)');
+          
+          if (profile.longDescription) {
+            console.log(chalk.gray('\nLong Description:'));
+            console.log(profile.longDescription);
+          }
+
+          if (profile.profileAnswers && Object.keys(profile.profileAnswers).length > 0) {
+            console.log(chalk.yellow.bold('\nProfile Answers:'));
+            Object.entries(profile.profileAnswers).forEach(([qId, answer]) => {
+              console.log(`${chalk.cyan(qId)}: ${chalk.white(String(answer))}`);
+            });
+          }
+        } else {
+          console.error(chalk.red('Error:'), response.error?.message || 'Failed to get public profile');
+        }
+      } catch (error) {
+        console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      }
+    });
+
+  profile
     .command('complete')
     .description('Complete profile by answering questions')
     .requiredOption('-n, --network <id>', 'Network ID')
